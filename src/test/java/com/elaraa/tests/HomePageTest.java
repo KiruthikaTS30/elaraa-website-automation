@@ -1,7 +1,9 @@
+
 package com.elaraa.tests;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -13,8 +15,12 @@ public class HomePageTest {
 
     @BeforeMethod
     public void setUp() {
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless=new");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+
+        driver = new ChromeDriver(options);
     }
 
     @Test
@@ -23,12 +29,13 @@ public class HomePageTest {
         driver.get("https://elaraastudio.com/home");
 
         String title = driver.getTitle();
+        String url = driver.getCurrentUrl();
 
         System.out.println("Page Title: " + title);
-        System.out.println("URL: " + driver.getCurrentUrl());
+        System.out.println("URL: " + url);
 
         Assert.assertTrue(
-            driver.getCurrentUrl().startsWith("https://"),
+            url.startsWith("https://"),
             "Website should use HTTPS"
         );
 
