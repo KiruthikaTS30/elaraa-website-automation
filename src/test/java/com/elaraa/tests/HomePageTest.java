@@ -438,56 +438,49 @@ public class HomePageTest {
 
         openHomePage();
 
-        By kurtisText = By.xpath(
-                "//*[normalize-space()='Kurtis']");
+        wait.until(d ->
+                (Boolean) ((JavascriptExecutor) d).executeScript(
+                        "return document.body.innerText.includes('Kurtis');"
+                ));
 
-        List<WebElement> elements = wait.until(
-                ExpectedConditions.visibilityOfAllElementsLocatedBy(
-                        kurtisText));
+        Object clickResult = ((JavascriptExecutor) driver).executeScript(
 
-        boolean navigationSuccessful = false;
+                "var elements = Array.from(document.querySelectorAll('body *'));" +
 
-        for (WebElement element : elements) {
+                "var matches = elements.filter(e => " +
+                "e.children.length === 0 && " +
+                "e.textContent.trim() === 'Kurtis' && " +
+                "e.getClientRects().length > 0);" +
 
-            if (!element.isDisplayed()) {
-                continue;
-            }
+                "var target = matches.find(e => {" +
+                "var r = e.getBoundingClientRect();" +
+                "return r.top >= 0 && r.top < window.innerHeight;" +
+                "});" +
 
-            try {
+                "if (!target) return false;" +
 
-                ((JavascriptExecutor) driver).executeScript(
-                        "var target = arguments[0];" +
-                        "var clickable = target.closest('a,button,[role=button]');" +
-                        "if (clickable) clickable.click();" +
-                        "else target.click();",
-                        element);
+                "var clickable = target.closest('a, button, [role=button]');" +
 
-                try {
-                    new WebDriverWait(driver, Duration.ofSeconds(5))
-                            .until(d ->
-                                    d.getCurrentUrl().contains("categoryId=2"));
+                "if (clickable) {" +
+                "clickable.click();" +
+                "} else {" +
+                "target.click();" +
+                "}" +
 
-                    navigationSuccessful = true;
-                    break;
+                "return true;"
+        );
 
-                } catch (org.openqa.selenium.TimeoutException e) {
-                    driver.get(homeUrl);
+        Assert.assertEquals(
+                clickResult,
+                true,
+                "Visible Kurtis category element was not found");
 
-                    wait.until(
-                            ExpectedConditions.visibilityOfElementLocated(
-                                    By.id("root")));
-                }
-
-            } catch (Exception e) {
-                System.out.println(
-                        "Could not click this Kurtis element: "
-                                + e.getMessage());
-            }
-        }
+        wait.until(d ->
+                d.getCurrentUrl().contains("categoryId=2"));
 
         Assert.assertTrue(
-                navigationSuccessful,
-                "Kurtis category navigation did not open categoryId=2");
+                driver.getCurrentUrl().contains("categoryId=2"),
+                "Kurtis category navigation failed");
 
         System.out.println(
                 "Kurtis category URL: " + driver.getCurrentUrl());
