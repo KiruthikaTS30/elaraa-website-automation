@@ -6,6 +6,7 @@ import java.util.List;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
@@ -193,6 +194,7 @@ public class HomePageTest {
                 System.out.println("ID: " + id);
                 System.out.println("Href: " + href);
                 System.out.println("Role: " + role);
+
                 System.out.println("--------------------");
             }
         }
@@ -271,6 +273,69 @@ public class HomePageTest {
         Assert.assertTrue(
             driver.findElement(By.tagName("body")).isDisplayed(),
             "Homepage should load for Login inspection"
+        );
+    }
+
+    // TEST 5: Deep DOM Inspection
+    @Test
+    public void inspectLoginDOM() {
+
+        driver.get("https://elaraastudio.com/home");
+
+        wait.until(d ->
+            d.findElement(By.tagName("body")).isDisplayed()
+        );
+
+        wait.until(d ->
+            d.findElement(By.id("root"))
+             .getText()
+             .contains("Login")
+        );
+
+        JavascriptExecutor js =
+            (JavascriptExecutor) driver;
+
+        String result = (String) js.executeScript(
+
+            "const root = document.querySelector('#root');" +
+
+            "if (!root) return 'ROOT NOT FOUND';" +
+
+            "const walker = document.createTreeWalker(" +
+            "root, NodeFilter.SHOW_TEXT);" +
+
+            "let node;" +
+
+            "while (node = walker.nextNode()) {" +
+
+            "if (node.nodeValue.trim().toLowerCase() === 'login') {" +
+
+            "let element = node.parentElement;" +
+
+            "let output = 'LOGIN HTML STRUCTURE:\\n';" +
+
+            "for (let i = 0; i < 5 && element; i++) {" +
+
+            "output += element.outerHTML.substring(0, 2000) + '\\n';" +
+
+            "element = element.parentElement;" +
+
+            "}" +
+
+            "return output;" +
+
+            "}" +
+
+            "}" +
+
+            "return 'LOGIN TEXT NODE NOT FOUND';"
+        );
+
+        System.out.println(result);
+
+        Assert.assertTrue(
+            driver.findElement(By.id("root")).isDisplayed(),
+            "Homepage root should be visible"
         );
     }
 
