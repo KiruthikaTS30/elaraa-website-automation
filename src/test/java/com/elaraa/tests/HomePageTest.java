@@ -636,6 +636,66 @@ public class HomePageTest {
 
         verifyCategoryNavigation("Tops");
     }
+    // TEST 19: VERIFY PRODUCT DETAILS PAGE
+
+@Test
+public void verifyProductDetailsPage() {
+
+    String productUrl =
+            "https://elaraastudio.com/product/details/20?itemId=58";
+
+    driver.get(productUrl);
+
+    wait.until(d ->
+            ((JavascriptExecutor) d)
+                    .executeScript("return document.readyState")
+                    .equals("complete"));
+
+    wait.until(
+            ExpectedConditions.visibilityOfElementLocated(
+                    By.id("root")));
+
+    wait.until(d -> {
+
+        String pageText =
+                d.findElement(By.tagName("body")).getText();
+
+        return pageText.contains("₹574")
+                && pageText.contains("SELECT SIZE")
+                && pageText.contains("WISHLIST")
+                && pageText.contains("BUY NOW");
+    });
+
+    String currentUrl = driver.getCurrentUrl();
+
+    String pageText =
+            driver.findElement(By.tagName("body")).getText();
+
+    Assert.assertTrue(
+            currentUrl.contains("/product/details/20")
+                    && currentUrl.contains("itemId=58"),
+            "Product details URL is incorrect");
+
+    Assert.assertTrue(
+            pageText.contains("₹574"),
+            "Product price is not displayed");
+
+    Assert.assertTrue(
+            pageText.contains("SELECT SIZE"),
+            "Size selection is not displayed");
+
+    Assert.assertTrue(
+            pageText.contains("WISHLIST"),
+            "Wishlist button is not displayed");
+
+    Assert.assertTrue(
+            pageText.contains("BUY NOW"),
+            "Buy Now button is not displayed");
+
+    System.out.println("Product details page verified successfully.");
+    System.out.println("Product URL: " + currentUrl);
+    System.out.println("Product price: ₹574");
+}
 
 
     // REUSABLE CATEGORY NAVIGATION METHOD
