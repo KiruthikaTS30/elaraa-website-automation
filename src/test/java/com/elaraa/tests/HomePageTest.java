@@ -10,7 +10,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.TimeoutException;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -21,6 +20,8 @@ public class HomePageTest {
 
     WebDriver driver;
     WebDriverWait wait;
+
+    By loadingOverlay = By.cssSelector(".global-loading-overlay");
 
     @BeforeMethod
     public void setUp() {
@@ -34,12 +35,20 @@ public class HomePageTest {
         wait = new WebDriverWait(driver, Duration.ofSeconds(30));
     }
 
+    // Wait until website loading overlay disappears
+    public void waitForPageReady() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.id("root")));
+
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(
+                loadingOverlay));
+    }
+
     @Test
     public void verifyHomePage() {
         driver.get("https://elaraastudio.com/home");
 
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.id("root")));
+        waitForPageReady();
 
         Assert.assertEquals(driver.getTitle(), "Elaraa Studio");
         Assert.assertTrue(driver.getCurrentUrl().startsWith("https://"));
@@ -51,8 +60,7 @@ public class HomePageTest {
     public void verifyHomePageContent() {
         driver.get("https://elaraastudio.com/home");
 
-        wait.until(d -> d.findElement(By.id("root"))
-                .getText().contains("Login"));
+        waitForPageReady();
 
         String text = driver.findElement(By.id("root")).getText();
 
@@ -64,10 +72,13 @@ public class HomePageTest {
         System.out.println("PASS: Homepage content validation");
     }
 
-    // LOGIN FUNCTIONAL INSPECTION
+    // LOGIN FUNCTIONAL TEST
     @Test
     public void inspectLoginAfterClick() {
+
         driver.get("https://elaraastudio.com/home");
+
+        waitForPageReady();
 
         By loginLocator = By.cssSelector(
                 "button[aria-label='Login to your account']");
@@ -80,33 +91,16 @@ public class HomePageTest {
 
         loginButton.click();
 
-        System.out.println("LOGIN BUTTON CLICKED");
-        System.out.println("Current URL: " + driver.getCurrentUrl());
+        System.out.println("PASS: Login button clicked");
 
-        try {
-            new WebDriverWait(driver, Duration.ofSeconds(5)).until(d -> {
-                List<WebElement> fields =
-                        d.findElements(By.cssSelector(
-                                "input, textarea, select"));
+        System.out.println("URL after click: " +
+                driver.getCurrentUrl());
 
-                for (WebElement field : fields) {
-                    if (field.isDisplayed()) {
-                        return true;
-                    }
-                }
-
-                return !d.getCurrentUrl().equals(
-                        "https://elaraastudio.com/home");
-            });
-        } catch (TimeoutException e) {
-            System.out.println(
-                    "No visible form or URL change detected within 5 seconds.");
-        }
-
-        System.out.println("FIELDS AFTER LOGIN CLICK:");
-
+        // Inspect fields after clicking Login
         List<WebElement> fields = driver.findElements(
                 By.cssSelector("input, textarea, select"));
+
+        System.out.println("FIELDS AFTER LOGIN CLICK:");
 
         for (WebElement field : fields) {
             if (field.isDisplayed()) {
@@ -121,17 +115,16 @@ public class HomePageTest {
             }
         }
 
-        System.out.println("VISIBLE BUTTONS AFTER LOGIN CLICK:");
+        System.out.println("VISIBLE BUTTONS:");
 
         List<WebElement> buttons = driver.findElements(
                 By.tagName("button"));
 
         for (WebElement button : buttons) {
             if (button.isDisplayed()) {
-                System.out.println(
-                        "Text: " + button.getText());
-                System.out.println(
-                        "ARIA: " + button.getAttribute("aria-label"));
+                System.out.println("Text: " + button.getText());
+                System.out.println("ARIA: " +
+                        button.getAttribute("aria-label"));
             }
         }
 
