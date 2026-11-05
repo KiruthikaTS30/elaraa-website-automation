@@ -738,6 +738,55 @@ public void verifyProductSizeSelection() {
     System.out.println("Selected size: M");
 }
 
+    // TEST 21: VERIFY PRODUCT QUANTITY INCREASE
+
+@Test
+public void verifyProductQuantityIncrease() {
+
+    String productUrl =
+            "https://elaraastudio.com/product/details/20?itemId=58";
+
+    driver.get(productUrl);
+
+    wait.until(
+            ExpectedConditions.visibilityOfElementLocated(
+                    By.id("root")));
+
+    By increaseQuantityButton = By.cssSelector(
+            "button.cell-qty-btn[aria-label='Increase quantity']");
+
+    WebElement plusButton = wait.until(
+            ExpectedConditions.elementToBeClickable(
+                    increaseQuantityButton));
+
+    WebElement quantityContainer =
+            plusButton.findElement(By.xpath(".."));
+
+    String beforeClick = quantityContainer.getText();
+
+    plusButton.click();
+
+    wait.until(d ->
+            !d.findElement(increaseQuantityButton)
+                    .findElement(By.xpath(".."))
+                    .getText()
+                    .equals(beforeClick));
+
+    String afterClick = driver
+            .findElement(increaseQuantityButton)
+            .findElement(By.xpath(".."))
+            .getText();
+
+    Assert.assertNotEquals(
+            afterClick,
+            beforeClick,
+            "Product quantity did not increase");
+
+    System.out.println("Product quantity increase verified.");
+    System.out.println("Before: " + beforeClick);
+    System.out.println("After: " + afterClick);
+}
+
     // REUSABLE CATEGORY NAVIGATION METHOD
 
     private void verifyCategoryNavigation(String categoryName) {
