@@ -4,9 +4,9 @@ import java.time.Duration;
 import java.util.List;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -54,7 +54,6 @@ public class HomePageTest {
                 loginButton));
     }
 
-    // Check that the loading overlay does not cover Login.
     public void waitUntilLoginIsUnblocked() {
 
         try {
@@ -98,23 +97,8 @@ public class HomePageTest {
             System.out.println(
                 "DEFECT: Login button remains blocked.");
 
-            List<WebElement> overlays =
-                driver.findElements(loadingOverlay);
-
-            for (WebElement overlay : overlays) {
-
-                System.out.println(
-                    "Overlay displayed: " +
-                    overlay.isDisplayed());
-
-                System.out.println(
-                    "Overlay HTML: " +
-                    overlay.getAttribute("outerHTML"));
-            }
-
             Assert.fail(
-                "Login blocked by loading overlay. " +
-                "Website did not become ready within 30 seconds.");
+                "Login blocked by loading overlay.");
         }
     }
 
@@ -188,14 +172,50 @@ public class HomePageTest {
             if (field.isDisplayed()) {
 
                 System.out.println(
+                    "Tag: " + field.getTagName());
+
+                System.out.println(
                     "Type: " +
                     field.getAttribute("type"));
 
                 System.out.println(
                     "Placeholder: " +
                     field.getAttribute("placeholder"));
+
+                System.out.println(
+                    "Name: " +
+                    field.getAttribute("name"));
+
+                System.out.println("-------------------");
             }
         }
+
+        System.out.println("LOGIN FORM BUTTON DETAILS:");
+
+        List<WebElement> buttons =
+            driver.findElements(By.tagName("button"));
+
+        for (WebElement button : buttons) {
+
+            if (button.isDisplayed()) {
+
+                System.out.println(
+                    "Button text: " + button.getText());
+
+                System.out.println(
+                    "Button type: " +
+                    button.getAttribute("type"));
+
+                System.out.println(
+                    "Button aria-label: " +
+                    button.getAttribute("aria-label"));
+
+                System.out.println("-------------------");
+            }
+        }
+
+        System.out.println(
+            "LOGIN FORM INSPECTION COMPLETED");
     }
 
     @Test
