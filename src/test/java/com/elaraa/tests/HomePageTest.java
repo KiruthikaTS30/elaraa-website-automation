@@ -1,3 +1,4 @@
+
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -155,10 +156,7 @@ public class HomePageTest {
 
         waitUntilLoginIsUnblocked();
 
-        WebElement login =
-            driver.findElement(loginButton);
-
-        login.click();
+        driver.findElement(loginButton).click();
 
         System.out.println(
             "PASS: Login button clicked successfully");
@@ -255,56 +253,63 @@ public class HomePageTest {
                 ExpectedConditions.visibilityOfElementLocated(
                     mobileNumber));
 
-        Assert.assertTrue(
-            mobile.getAttribute("value").isEmpty(),
-            "Mobile number field should be empty initially");
-
         WebElement continueBtn =
             wait.until(
                 ExpectedConditions.elementToBeClickable(
                     continueButton));
 
-        continueBtn.click();
+        System.out.println("BEFORE CLICK:");
 
         System.out.println(
-            "TEST: Empty mobile number validation");
+            "Required: " +
+            mobile.getAttribute("required"));
+
+        System.out.println(
+            "Pattern: " +
+            mobile.getAttribute("pattern"));
+
+        System.out.println(
+            "Input HTML: " +
+            mobile.getAttribute("outerHTML"));
+
+        Assert.assertTrue(
+            mobile.getAttribute("value").isEmpty(),
+            "Mobile number field should be empty initially");
+
+        continueBtn.click();
+
+        JavascriptExecutor js =
+            (JavascriptExecutor) driver;
+
+        boolean valid = (Boolean) js.executeScript(
+            "return arguments[0].validity.valid;",
+            mobile);
+
+        String validationMessage = (String)
+            js.executeScript(
+                "return arguments[0].validationMessage;",
+                mobile);
+
+        System.out.println("AFTER CLICK:");
+
+        System.out.println(
+            "Input valid: " + valid);
+
+        System.out.println(
+            "Browser validation message: " +
+            validationMessage);
 
         System.out.println(
             "Mobile number value: " +
             mobile.getAttribute("value"));
 
         System.out.println(
-            "Current URL: " +
-            driver.getCurrentUrl());
+            "Parent HTML: " +
+            mobile.findElement(By.xpath(".."))
+                  .getAttribute("outerHTML"));
 
         System.out.println(
-            "Validation message inspection:");
-
-        List<WebElement> messages =
-            driver.findElements(
-                By.cssSelector(
-                    "[role='alert'], .error, .error-message"));
-
-        boolean foundMessage = false;
-
-        for (WebElement message : messages) {
-
-            if (message.isDisplayed()
-                    && !message.getText().trim().isEmpty()) {
-
-                System.out.println(
-                    "Validation message: " +
-                    message.getText());
-
-                foundMessage = true;
-            }
-        }
-
-        if (!foundMessage) {
-
-            System.out.println(
-                "No visible validation message found by these locators.");
-        }
+            "Empty mobile validation inspection completed.");
     }
 
     @AfterMethod(alwaysRun = true)
@@ -314,4 +319,3 @@ public class HomePageTest {
             driver.quit();
         }
     }
-}
