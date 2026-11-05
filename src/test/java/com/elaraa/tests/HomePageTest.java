@@ -1,3 +1,4 @@
+
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -24,16 +25,20 @@ public class HomePageTest {
     WebDriverWait wait;
 
     By loginButton = By.cssSelector(
-        "button[aria-label='Login to your account']");
+        "button[aria-label='Login to your account']"
+    );
 
     By loadingOverlay = By.cssSelector(
-        ".global-loading-overlay");
+        ".global-loading-overlay"
+    );
 
     By mobileNumber = By.cssSelector(
-        "input[type='tel'][placeholder='Mobile Number*']");
+        "input[type='tel'][placeholder='Mobile Number*']"
+    );
 
     By continueButton = By.xpath(
-        "//button[normalize-space()='CONTINUE']");
+        "//button[normalize-space()='CONTINUE']"
+    );
 
     @BeforeMethod
     public void setUp() {
@@ -48,7 +53,9 @@ public class HomePageTest {
         driver = new ChromeDriver(options);
 
         wait = new WebDriverWait(
-            driver, Duration.ofSeconds(30));
+            driver,
+            Duration.ofSeconds(30)
+        );
     }
 
     public void openHomePage() {
@@ -56,259 +63,256 @@ public class HomePageTest {
         driver.get("https://elaraastudio.com/home");
 
         wait.until(
-            ExpectedConditions.visibilityOfElementLocated(
-                loginButton));
+            ExpectedConditions.visibilityOfElementLocated(loginButton)
+        );
     }
 
     public void waitUntilLoginIsUnblocked() {
 
         try {
 
-            wait.until(currentDriver -> {
+            wait.until(d -> {
 
                 List<WebElement> overlays =
-                    currentDriver.findElements(loadingOverlay);
+                    d.findElements(loadingOverlay);
 
                 for (WebElement overlay : overlays) {
-
                     if (overlay.isDisplayed()) {
                         return false;
                     }
                 }
 
-                WebElement button =
-                    currentDriver.findElement(loginButton);
+                WebElement button = d.findElement(loginButton);
 
-                if (!button.isDisplayed()
-                        || !button.isEnabled()) {
-                    return false;
-                }
-
-                JavascriptExecutor js =
-                    (JavascriptExecutor) currentDriver;
-
-                return Boolean.TRUE.equals(
-                    js.executeScript(
-                        "const el = arguments[0];" +
-                        "const r = el.getBoundingClientRect();" +
-                        "const x = r.left + r.width / 2;" +
-                        "const y = r.top + r.height / 2;" +
-                        "const top = document.elementFromPoint(x, y);" +
-                        "return top === el || el.contains(top);",
-                        button));
+                return (Boolean) ((JavascriptExecutor) d)
+                    .executeScript(
+                        "var r = arguments[0].getBoundingClientRect();" +
+                        "var e = document.elementFromPoint(" +
+                        "r.left + r.width/2, r.top + r.height/2);" +
+                        "return e === arguments[0] || " +
+                        "arguments[0].contains(e);",
+                        button
+                    );
             });
 
         } catch (TimeoutException e) {
 
-            System.out.println(
-                "DEFECT: Login button remains blocked.");
-
             Assert.fail(
-                "Login blocked by loading overlay.");
+                "Login button is blocked by another element."
+            );
         }
     }
+
+    public void openLoginForm() {
+
+        openHomePage();
+
+        waitUntilLoginIsUnblocked();
+
+        driver.findElement(loginButton).click();
+
+        wait.until(
+            ExpectedConditions.visibilityOfElementLocated(mobileNumber)
+        );
+    }
+
+    // TEST CASE 1: Verify homepage title and HTTPS URL
 
     @Test
     public void verifyHomePage() {
 
         openHomePage();
 
+        String title = driver.getTitle();
+        String url = driver.getCurrentUrl();
+
+        System.out.println("Page title: " + title);
+        System.out.println("Current URL: " + url);
+
         Assert.assertEquals(
-            driver.getTitle(),
-            "Elaraa Studio");
+            title,
+            "Elaraa Studio",
+            "Homepage title is incorrect"
+        );
 
         Assert.assertTrue(
-            driver.getCurrentUrl().startsWith("https://"));
-
-        System.out.println(
-            "PASS: Homepage title and URL validation");
+            url.startsWith("https://"),
+            "Website is not using HTTPS"
+        );
     }
+
+    // TEST CASE 2: Verify homepage Login content
 
     @Test
     public void verifyHomePageContent() {
 
         openHomePage();
 
-        WebElement login =
-            driver.findElement(loginButton);
+        WebElement login = driver.findElement(loginButton);
 
         Assert.assertTrue(
             login.isDisplayed(),
-            "Login button is not visible");
+            "Login button is not displayed"
+        );
 
         Assert.assertTrue(
             login.getText().contains("Login"),
-            "Login button text is incorrect");
+            "Login button text is incorrect"
+        );
 
+        System.out.println("Homepage body text:");
         System.out.println(
-            "PASS: Login button visibility and text");
-
-        System.out.println(
-            "Homepage body text: " +
-            driver.findElement(By.tagName("body")).getText());
+            driver.findElement(By.tagName("body")).getText()
+        );
     }
+
+    // TEST CASE 3: Verify Login button functionality
 
     @Test
     public void verifyLoginButtonClick() {
 
-        openHomePage();
+        openLoginForm();
 
-        waitUntilLoginIsUnblocked();
+        WebElement mobile = driver.findElement(mobileNumber);
 
-        driver.findElement(loginButton).click();
+        Assert.assertTrue(
+            mobile.isDisplayed(),
+            "Mobile number field is not displayed"
+        );
 
+        System.out.println("Login form opened successfully.");
         System.out.println(
-            "PASS: Login button clicked successfully");
-
-        System.out.println(
-            "URL after click: " +
-            driver.getCurrentUrl());
-
-        List<WebElement> fields =
-            driver.findElements(
-                By.cssSelector("input, textarea, select"));
-
-        System.out.println("VISIBLE FORM FIELDS:");
-
-        for (WebElement field : fields) {
-
-            if (field.isDisplayed()) {
-
-                System.out.println(
-                    "Tag: " + field.getTagName());
-
-                System.out.println(
-                    "Type: " +
-                    field.getAttribute("type"));
-
-                System.out.println(
-                    "Placeholder: " +
-                    field.getAttribute("placeholder"));
-
-                System.out.println(
-                    "Name: " +
-                    field.getAttribute("name"));
-
-                System.out.println("-------------------");
-            }
-        }
-
-        System.out.println("LOGIN FORM BUTTON DETAILS:");
-
-        List<WebElement> buttons =
-            driver.findElements(By.tagName("button"));
-
-        for (WebElement button : buttons) {
-
-            if (button.isDisplayed()) {
-
-                System.out.println(
-                    "Button text: " + button.getText());
-
-                System.out.println(
-                    "Button type: " +
-                    button.getAttribute("type"));
-
-                System.out.println(
-                    "Button aria-label: " +
-                    button.getAttribute("aria-label"));
-
-                System.out.println("-------------------");
-            }
-        }
-
-        System.out.println(
-            "LOGIN FORM INSPECTION COMPLETED");
+            "Mobile placeholder: " +
+            mobile.getAttribute("placeholder")
+        );
     }
+
+    // TEST CASE 4: Verify Campaign page
 
     @Test
     public void verifyCampaignPageLoads() {
 
         driver.get(
-            "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true");
+            "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true"
+        );
 
         wait.until(
-            ExpectedConditions.visibilityOfElementLocated(
-                By.tagName("body")));
+            ExpectedConditions.presenceOfElementLocated(
+                By.tagName("body")
+            )
+        );
+
+        String title = driver.getTitle();
+
+        System.out.println("Campaign page title: " + title);
+        System.out.println(
+            "Campaign URL: " + driver.getCurrentUrl()
+        );
+
+        Assert.assertTrue(
+            driver.getCurrentUrl().contains("filterdeal"),
+            "Campaign page URL is incorrect"
+        );
 
         Assert.assertFalse(
-            driver.getTitle().trim().isEmpty());
-
-        System.out.println(
-            "PASS: Campaign page loaded");
+            driver.findElement(By.tagName("body"))
+                .getText().trim().isEmpty(),
+            "Campaign page body is empty"
+        );
     }
+
+    // TEST CASE 5: Verify empty mobile number validation
 
     @Test
     public void verifyEmptyMobileNumberValidation() {
 
-        openHomePage();
+        openLoginForm();
 
-        waitUntilLoginIsUnblocked();
+        WebElement mobile = driver.findElement(mobileNumber);
 
-        driver.findElement(loginButton).click();
+        Assert.assertEquals(
+            mobile.getAttribute("value"),
+            "",
+            "Mobile number field is not empty initially"
+        );
 
-        WebElement mobile =
-            wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                    mobileNumber));
-
-        WebElement continueBtn =
-            wait.until(
-                ExpectedConditions.elementToBeClickable(
-                    continueButton));
-
-        System.out.println("BEFORE CLICK:");
-
-        System.out.println(
-            "Required: " +
-            mobile.getAttribute("required"));
-
-        System.out.println(
-            "Pattern: " +
-            mobile.getAttribute("pattern"));
-
-        System.out.println(
-            "Input HTML: " +
-            mobile.getAttribute("outerHTML"));
-
-        Assert.assertTrue(
-            mobile.getAttribute("value").isEmpty(),
-            "Mobile number field should be empty initially");
-
-        continueBtn.click();
+        driver.findElement(continueButton).click();
 
         JavascriptExecutor js =
             (JavascriptExecutor) driver;
 
         boolean valid = (Boolean) js.executeScript(
             "return arguments[0].validity.valid;",
-            mobile);
+            mobile
+        );
 
-        String validationMessage = (String)
-            js.executeScript(
-                "return arguments[0].validationMessage;",
-                mobile);
+        String message = (String) js.executeScript(
+            "return arguments[0].validationMessage;",
+            mobile
+        );
 
-        System.out.println("AFTER CLICK:");
+        System.out.println("Required: " +
+            mobile.getAttribute("required"));
 
-        System.out.println(
-            "Input valid: " + valid);
-
-        System.out.println(
-            "Browser validation message: " +
-            validationMessage);
+        System.out.println("Input valid: " + valid);
 
         System.out.println(
-            "Mobile number value: " +
-            mobile.getAttribute("value"));
+            "Browser validation message: " + message
+        );
+
+        Assert.assertFalse(
+            valid,
+            "Empty mobile number should be rejected"
+        );
+    }
+
+    // TEST CASE 6: Check invalid mobile number behaviour
+
+    @Test
+    public void verifyInvalidMobileNumberValidation() {
+
+        openLoginForm();
+
+        WebElement mobile = driver.findElement(mobileNumber);
+
+        mobile.sendKeys("12345");
 
         System.out.println(
-            "Parent HTML: " +
-            mobile.findElement(By.xpath(".."))
-                  .getAttribute("outerHTML"));
+            "Entered mobile number: " +
+            mobile.getAttribute("value")
+        );
+
+        driver.findElement(continueButton).click();
+
+        JavascriptExecutor js =
+            (JavascriptExecutor) driver;
+
+        boolean valid = (Boolean) js.executeScript(
+            "return arguments[0].validity.valid;",
+            mobile
+        );
+
+        String message = (String) js.executeScript(
+            "return arguments[0].validationMessage;",
+            mobile
+        );
 
         System.out.println(
-            "Empty mobile validation inspection completed.");
+            "Invalid number input valid: " + valid
+        );
+
+        System.out.println(
+            "Browser validation message: " + message
+        );
+
+        System.out.println(
+            "Final mobile number: " +
+            mobile.getAttribute("value")
+        );
+
+        System.out.println(
+            "Invalid mobile number test completed."
+        );
     }
 
     @AfterMethod(alwaysRun = true)
