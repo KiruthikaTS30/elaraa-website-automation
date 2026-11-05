@@ -147,30 +147,18 @@ public class HomePageTest {
             }
 
             String tag = element.getTagName();
-
             String text = element.getText();
-
             String aria = element.getAttribute("aria-label");
-
             String title = element.getAttribute("title");
-
             String className = element.getAttribute("class");
-
             String id = element.getAttribute("id");
-
             String href = element.getAttribute("href");
-
             String role = element.getAttribute("role");
 
             String combined = (
-                tag + " " +
-                text + " " +
-                aria + " " +
-                title + " " +
-                className + " " +
-                id + " " +
-                href + " " +
-                role
+                tag + " " + text + " " + aria + " " +
+                title + " " + className + " " +
+                id + " " + href + " " + role
             ).toLowerCase();
 
             boolean isInteractive =
@@ -197,7 +185,6 @@ public class HomePageTest {
                 accountCount++;
 
                 System.out.println("ACCOUNT ELEMENT FOUND");
-
                 System.out.println("Tag: " + tag);
                 System.out.println("Text: " + text);
                 System.out.println("ARIA: " + aria);
@@ -206,7 +193,6 @@ public class HomePageTest {
                 System.out.println("ID: " + id);
                 System.out.println("Href: " + href);
                 System.out.println("Role: " + role);
-
                 System.out.println("--------------------");
             }
         }
@@ -219,17 +205,72 @@ public class HomePageTest {
             "Total Account Related Elements: " + accountCount
         );
 
-        if (accountCount == 0) {
-
-            System.out.println(
-                "No account-related elements found. " +
-                "Further DOM inspection is required."
-            );
-        }
-
         Assert.assertTrue(
             driver.findElement(By.tagName("body")).isDisplayed(),
             "Homepage should load successfully"
+        );
+    }
+
+    // TEST 4: Inspect Login Element
+    @Test
+    public void inspectLoginElement() {
+
+        driver.get("https://elaraastudio.com/home");
+
+        wait.until(d ->
+            d.getTitle() != null &&
+            !d.getTitle().trim().isEmpty()
+        );
+
+        wait.until(d ->
+            d.findElement(By.tagName("body")).isDisplayed()
+        );
+
+        List<WebElement> loginElements = driver.findElements(
+            By.xpath("//*[normalize-space(text())='Login']")
+        );
+
+        System.out.println("LOGIN ELEMENT INSPECTION");
+
+        for (WebElement element : loginElements) {
+
+            System.out.println(
+                "Tag: " + element.getTagName()
+            );
+
+            System.out.println(
+                "Text: " + element.getText()
+            );
+
+            System.out.println(
+                "HTML: " + element.getAttribute("outerHTML")
+            );
+
+            try {
+
+                System.out.println(
+                    "Parent HTML: " +
+                    element.findElement(By.xpath(".."))
+                           .getAttribute("outerHTML")
+                );
+
+            } catch (Exception e) {
+
+                System.out.println(
+                    "Parent element could not be inspected."
+                );
+            }
+
+            System.out.println("--------------------");
+        }
+
+        System.out.println(
+            "Login elements found: " + loginElements.size()
+        );
+
+        Assert.assertTrue(
+            driver.findElement(By.tagName("body")).isDisplayed(),
+            "Homepage should load for Login inspection"
         );
     }
 
