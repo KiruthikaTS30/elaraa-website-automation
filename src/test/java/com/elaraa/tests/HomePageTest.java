@@ -1,4 +1,3 @@
-
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -319,3 +318,4 @@ public class HomePageTest {
             driver.quit();
         }
     }
+}
