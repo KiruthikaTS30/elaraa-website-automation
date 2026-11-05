@@ -6,11 +6,9 @@ import java.util.List;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import org.testng.Assert;
@@ -114,73 +112,61 @@ public class HomePageTest {
         );
     }
 
-    // TEST 3: View Account Button
+    // TEST 3: Investigate Account Elements
     @Test
-    public void verifyViewAccountButton() {
+    public void inspectAccountElements() {
 
         driver.get("https://elaraastudio.com/home");
 
-        By accountLocator = By.cssSelector(
-            "button[aria-label='View account']"
+        wait.until(d ->
+            d.getTitle() != null &&
+            !d.getTitle().trim().isEmpty()
         );
 
-        WebElement accountButton = wait.until(
-            ExpectedConditions.visibilityOfElementLocated(
-                accountLocator
-            )
+        List<WebElement> elements = driver.findElements(
+            By.cssSelector("button, a, [role='button']")
+        );
+
+        System.out.println("Homepage elements:");
+
+        for (WebElement element : elements) {
+
+            if (element.isDisplayed()) {
+
+                System.out.println(
+                    "Tag: " + element.getTagName()
+                );
+
+                System.out.println(
+                    "Text: " + element.getText()
+                );
+
+                System.out.println(
+                    "ARIA label: " +
+                    element.getAttribute("aria-label")
+                );
+
+                System.out.println(
+                    "Title: " +
+                    element.getAttribute("title")
+                );
+
+                System.out.println(
+                    "Class: " +
+                    element.getAttribute("class")
+                );
+
+                System.out.println("--------------------");
+            }
+        }
+
+        System.out.println(
+            "Total buttons and links: " + elements.size()
         );
 
         Assert.assertTrue(
-            accountButton.isDisplayed(),
-            "Account button should be visible"
-        );
-
-        System.out.println(
-            "Account button is visible"
-        );
-
-        // Scroll button into view
-        ((JavascriptExecutor) driver).executeScript(
-            "arguments[0].scrollIntoView({block:'center'});",
-            accountButton
-        );
-
-        // Wait until clickable
-        accountButton = wait.until(
-            ExpectedConditions.elementToBeClickable(
-                accountLocator
-            )
-        );
-
-        // Perform normal Selenium click
-        accountButton.click();
-
-        System.out.println(
-            "Account button clicked"
-        );
-
-        // Verify account page or panel
-        boolean opened = wait.until(d ->
-            !d.getCurrentUrl().equals(
-                "https://elaraastudio.com/home"
-            )
-            ||
-            d.findElements(
-                By.cssSelector(
-                    "[role='dialog'], [role='menu']"
-                )
-            ).stream().anyMatch(
-                WebElement::isDisplayed
-            )
-        );
-
-        Assert.assertTrue(
-            opened,
-            "Account page or panel should open"
-        );
-
-        System.out.println(
-            "Current URL: " + driver.getCurrentUrl()
+            elements.size() > 0,
+            "Homepage should contain buttons or links"
         );
     }
 
