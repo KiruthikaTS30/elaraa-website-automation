@@ -424,14 +424,42 @@ public class HomePageTest {
 
         WebElement profile = driver.findElement(profileButton);
 
-        Assert.assertTrue(profile.isDisplayed());
+        Assert.assertTrue(
+                profile.isDisplayed(),
+                "Profile button is not displayed");
+
+        String previousPageText =
+                driver.findElement(By.tagName("body")).getText();
 
         profile.click();
 
-        System.out.println("Profile button clicked.");
+        wait.until(d -> {
 
+            String currentPageText =
+                    d.findElement(By.tagName("body")).getText();
+
+            return !currentPageText.equals(previousPageText)
+                    && currentPageText.contains("View Profile");
+        });
+
+        String profileMenuText =
+                driver.findElement(By.tagName("body")).getText();
+
+        Assert.assertTrue(
+                profileMenuText.contains("View Profile"),
+                "View Profile option is not displayed");
+
+        Assert.assertTrue(
+                profileMenuText.contains("Orders"),
+                "Orders option is not displayed");
+
+        Assert.assertTrue(
+                profileMenuText.contains("Wishlist"),
+                "Wishlist option is not displayed");
+
+        System.out.println("Profile menu verified successfully.");
         System.out.println(
-                driver.findElement(By.tagName("body")).getText());
+                "View Profile, Orders and Wishlist are displayed.");
     }
 
 
