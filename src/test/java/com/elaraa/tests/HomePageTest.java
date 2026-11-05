@@ -344,14 +344,22 @@ public class HomePageTest {
 
         WebElement wishlist = driver.findElement(wishlistButton);
 
-        Assert.assertTrue(wishlist.isDisplayed());
+        Assert.assertTrue(
+                wishlist.isDisplayed(),
+                "Wishlist button is not displayed");
 
         wishlist.click();
 
-        System.out.println("Wishlist button clicked.");
+        WebElement mobileField = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        mobileNumberField));
+
+        Assert.assertTrue(
+                mobileField.isDisplayed(),
+                "Login form did not open after clicking Wishlist");
 
         System.out.println(
-                driver.findElement(By.tagName("body")).getText());
+                "Wishlist button verified: Login form opened successfully.");
     }
 
 
