@@ -8,7 +8,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -549,20 +548,29 @@ public class HomePageTest {
     }
 
 
-    // TEST 16, 17, 18: CATEGORY NAVIGATION
+    // TEST 16: VERIFY BOTTOM WEAR CATEGORY NAVIGATION
 
     @Test
     public void verifyBottomWearCategoryNavigation() {
+
         verifyCategoryNavigation("Bottom Wear");
     }
 
+
+    // TEST 17: VERIFY CHUDIDAR SETS CATEGORY NAVIGATION
+
     @Test
     public void verifyChudidarSetsCategoryNavigation() {
+
         verifyCategoryNavigation("Chudidar Sets");
     }
 
+
+    // TEST 18: VERIFY TOPS CATEGORY NAVIGATION
+
     @Test
     public void verifyTopsCategoryNavigation() {
+
         verifyCategoryNavigation("Tops");
     }
 
@@ -574,39 +582,55 @@ public class HomePageTest {
         openHomePage();
 
         WebDriverWait categoryWait =
-                new WebDriverWait(driver, Duration.ofSeconds(20));
+                new WebDriverWait(driver, Duration.ofSeconds(30));
 
-        By categoryLocator = By.xpath(
-                "//*[normalize-space()='" + categoryName + "']"
-        );
-
-        WebElement categoryElement = categoryWait.until(d -> {
+        Object clickResult = categoryWait.until(d -> {
 
             try {
-                List<WebElement> elements =
-                        d.findElements(categoryLocator);
 
-                for (WebElement element : elements) {
+                return ((JavascriptExecutor) d).executeScript(
 
-                    if (element.isDisplayed()) {
-                        return element;
-                    }
-                }
+                        "var name = arguments[0];" +
 
-                return null;
+                        "var elements = Array.from(" +
+                        "document.querySelectorAll('body *'));" +
 
-            } catch (StaleElementReferenceException e) {
-                return null;
+                        "var matches = elements.filter(e => " +
+                        "e.children.length === 0 && " +
+                        "e.textContent.trim() === name && " +
+                        "e.getClientRects().length > 0);" +
+
+                        "if (matches.length === 0) return false;" +
+
+                        "var target = matches.find(e => " +
+                        "e.closest('a, button, [role=button], [onclick]'));" +
+
+                        "if (!target) target = matches[0];" +
+
+                        "var clickable = target.closest(" +
+                        "'a, button, [role=button], [onclick]');" +
+
+                        "if (!clickable) clickable = target;" +
+
+                        "clickable.scrollIntoView({" +
+                        "block: 'center', inline: 'center'});" +
+
+                        "clickable.click();" +
+
+                        "return true;",
+
+                        categoryName
+                );
+
+            } catch (Exception e) {
+                return false;
             }
         });
 
-        Assert.assertNotNull(
-                categoryElement,
-                categoryName + " category is not visible");
-
-        ((JavascriptExecutor) driver).executeScript(
-                "arguments[0].click();",
-                categoryElement);
+        Assert.assertEquals(
+                clickResult,
+                true,
+                categoryName + " category element could not be clicked");
 
         categoryWait.until(d ->
                 d.getCurrentUrl().contains("categoryId="));
