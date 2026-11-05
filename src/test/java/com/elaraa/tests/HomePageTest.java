@@ -1,4 +1,3 @@
-
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -75,6 +74,8 @@ public class HomePageTest {
         );
     }
 
+    // Open homepage
+
     public void openHomePage() {
 
         driver.get("https://elaraastudio.com/home");
@@ -86,42 +87,75 @@ public class HomePageTest {
         );
     }
 
+    // Wait until loading overlay disappears
+
+    public void waitUntilOverlayDisappears() {
+
+        wait.until(d -> {
+
+            List<WebElement> overlays =
+                d.findElements(loadingOverlay);
+
+            for (WebElement overlay : overlays) {
+
+                if (overlay.isDisplayed()) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }
+
+    // Wait until an element is not covered by another element
+
+    public void waitUntilElementIsUnblocked(By locator) {
+
+        wait.until(d -> {
+
+            List<WebElement> overlays =
+                d.findElements(loadingOverlay);
+
+            for (WebElement overlay : overlays) {
+
+                if (overlay.isDisplayed()) {
+                    return false;
+                }
+            }
+
+            List<WebElement> elements =
+                d.findElements(locator);
+
+            if (elements.isEmpty()) {
+                return false;
+            }
+
+            WebElement element = elements.get(0);
+
+            if (!element.isDisplayed() || !element.isEnabled()) {
+                return false;
+            }
+
+            return (Boolean) ((JavascriptExecutor) d)
+                .executeScript(
+                    "var r = arguments[0].getBoundingClientRect();" +
+                    "var e = document.elementFromPoint(" +
+                    "r.left + r.width/2, r.top + r.height/2);" +
+                    "return e === arguments[0] || " +
+                    "arguments[0].contains(e);",
+                    element
+                );
+        });
+    }
+
+    // Wait until Login button is unblocked
+
     public void waitUntilLoginIsUnblocked() {
 
-        try {
-
-            wait.until(d -> {
-
-                List<WebElement> overlays =
-                    d.findElements(loadingOverlay);
-
-                for (WebElement overlay : overlays) {
-                    if (overlay.isDisplayed()) {
-                        return false;
-                    }
-                }
-
-                WebElement button =
-                    d.findElement(loginButton);
-
-                return (Boolean) ((JavascriptExecutor) d)
-                    .executeScript(
-                        "var r = arguments[0].getBoundingClientRect();" +
-                        "var e = document.elementFromPoint(" +
-                        "r.left + r.width/2, r.top + r.height/2);" +
-                        "return e === arguments[0] || " +
-                        "arguments[0].contains(e);",
-                        button
-                    );
-            });
-
-        } catch (TimeoutException e) {
-
-            Assert.fail(
-                "Login button is blocked by another element."
-            );
-        }
+        waitUntilElementIsUnblocked(loginButton);
     }
+
+    // Open login form
 
     public void openLoginForm() {
 
@@ -153,6 +187,8 @@ public class HomePageTest {
         Assert.assertTrue(
             driver.getCurrentUrl().startsWith("https://")
         );
+
+        System.out.println("Homepage title verified.");
     }
 
     // TEST 2: Homepage Login content
@@ -190,7 +226,7 @@ public class HomePageTest {
         System.out.println("Login form opened successfully.");
     }
 
-    // TEST 4: Campaign page investigation
+    // TEST 4: Campaign page
 
     @Test
     public void verifyCampaignPageLoads() {
@@ -206,6 +242,7 @@ public class HomePageTest {
         );
 
         try {
+
             new WebDriverWait(
                 driver,
                 Duration.ofSeconds(20)
@@ -213,8 +250,12 @@ public class HomePageTest {
                 !d.findElement(By.id("root"))
                     .getText().trim().isEmpty()
             );
+
         } catch (TimeoutException e) {
-            System.out.println("Campaign content wait timed out.");
+
+            System.out.println(
+                "Campaign content wait timed out."
+            );
         }
 
         System.out.println(
@@ -230,7 +271,7 @@ public class HomePageTest {
         );
     }
 
-    // TEST 5: Empty mobile validation
+    // TEST 5: Empty mobile number validation
 
     @Test
     public void verifyEmptyMobileNumberValidation() {
@@ -260,7 +301,10 @@ public class HomePageTest {
             );
 
         System.out.println("Input valid: " + valid);
-        System.out.println("Validation message: " + message);
+
+        System.out.println(
+            "Validation message: " + message
+        );
 
         Assert.assertFalse(
             valid,
@@ -283,7 +327,8 @@ public class HomePageTest {
         driver.findElement(continueButton).click();
 
         System.out.println(
-            "Entered number: " + mobile.getAttribute("value")
+            "Entered number: " +
+            mobile.getAttribute("value")
         );
 
         System.out.println(
@@ -307,14 +352,14 @@ public class HomePageTest {
 
         openHomePage();
 
-        WebElement search =
-            wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                    searchBox
-                )
-            );
+        WebElement search = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(
+                searchBox
+            )
+        );
 
         Assert.assertTrue(search.isDisplayed());
+
         Assert.assertTrue(search.isEnabled());
 
         System.out.println(
@@ -330,14 +375,14 @@ public class HomePageTest {
 
         openHomePage();
 
-        WebElement search =
-            wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                    searchBox
-                )
-            );
+        WebElement search = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(
+                searchBox
+            )
+        );
 
         search.sendKeys("shirt");
+
         search.sendKeys(Keys.ENTER);
 
         System.out.println(
@@ -351,7 +396,8 @@ public class HomePageTest {
 
         Assert.assertTrue(
             search.getAttribute("value").equals("shirt")
-            || driver.getCurrentUrl().toLowerCase().contains("search"),
+            || driver.getCurrentUrl()
+                .toLowerCase().contains("search"),
             "Search text or search navigation was not detected"
         );
     }
@@ -363,12 +409,11 @@ public class HomePageTest {
 
         openHomePage();
 
-        WebElement search =
-            wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                    searchBox
-                )
-            );
+        WebElement search = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(
+                searchBox
+            )
+        );
 
         Assert.assertEquals(
             search.getAttribute("value"),
@@ -380,7 +425,8 @@ public class HomePageTest {
         Assert.assertTrue(search.isDisplayed());
 
         System.out.println(
-            "URL after empty search: " + driver.getCurrentUrl()
+            "URL after empty search: " +
+            driver.getCurrentUrl()
         );
     }
 
@@ -391,14 +437,10 @@ public class HomePageTest {
 
         openHomePage();
 
-        WebElement wishlist =
-            wait.until(
-                ExpectedConditions.elementToBeClickable(
-                    wishlistButton
-                )
-            );
+        waitUntilElementIsUnblocked(wishlistButton);
 
-        Assert.assertTrue(wishlist.isDisplayed());
+        WebElement wishlist =
+            driver.findElement(wishlistButton);
 
         wishlist.click();
 
@@ -419,14 +461,10 @@ public class HomePageTest {
 
         openHomePage();
 
-        WebElement bag =
-            wait.until(
-                ExpectedConditions.elementToBeClickable(
-                    bagButton
-                )
-            );
+        waitUntilElementIsUnblocked(bagButton);
 
-        Assert.assertTrue(bag.isDisplayed());
+        WebElement bag =
+            driver.findElement(bagButton);
 
         bag.click();
 
@@ -447,14 +485,10 @@ public class HomePageTest {
 
         openHomePage();
 
-        WebElement profile =
-            wait.until(
-                ExpectedConditions.elementToBeClickable(
-                    profileButton
-                )
-            );
+        waitUntilElementIsUnblocked(profileButton);
 
-        Assert.assertTrue(profile.isDisplayed());
+        WebElement profile =
+            driver.findElement(profileButton);
 
         profile.click();
 
@@ -467,6 +501,8 @@ public class HomePageTest {
             driver.findElement(By.tagName("body")).getText()
         );
     }
+
+    // Close browser after every test
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
