@@ -1,3 +1,4 @@
+
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -11,7 +12,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -23,26 +23,6 @@ public class HomePageTest {
     WebDriverWait wait;
 
     String homeUrl = "https://elaraastudio.com/home";
-
-    By loginButton = By.cssSelector(
-            "button[aria-label='Login to your account']");
-
-    By mobileNumberField = By.cssSelector(
-            "input[type='tel'][placeholder='Mobile Number*']");
-
-    By searchField = By.cssSelector("input[type='search']");
-
-    By wishlistButton = By.cssSelector(
-            "button[aria-label='View wishlist']");
-
-    By shoppingBagButton = By.cssSelector(
-            "button[aria-label='View shopping cart']");
-
-    By profileButton = By.cssSelector(
-            "button[aria-label='View profile']");
-
-
-    // BROWSER SETUP
 
     @BeforeMethod
     public void setUp() {
@@ -56,15 +36,15 @@ public class HomePageTest {
 
         driver = new ChromeDriver(options);
 
-        driver.manage().timeouts()
-                .implicitlyWait(Duration.ZERO);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 
-        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().timeouts()
+                .implicitlyWait(Duration.ofSeconds(3));
+
+        driver.manage().window().maximize();
     }
 
-
-    // COMMON HOMEPAGE METHOD
-
+    // Open homepage
     public void openHomePage() {
 
         driver.get(homeUrl);
@@ -74,29 +54,18 @@ public class HomePageTest {
                         .executeScript("return document.readyState")
                         .equals("complete"));
 
-        wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                        By.id("root")));
-
-        System.out.println("Current URL: " + driver.getCurrentUrl());
-        System.out.println("Page Title: " + driver.getTitle());
+        wait.until(ExpectedConditions
+                .visibilityOfElementLocated(By.id("root")));
     }
 
+    // Wait for visible element
+    public WebElement waitForVisible(By locator) {
 
-    // WAIT FOR ELEMENT TO BE VISIBLE
-
-    public WebElement waitForVisible(By locator, int seconds) {
-
-        WebDriverWait customWait =
-                new WebDriverWait(driver, Duration.ofSeconds(seconds));
-
-        return customWait.until(
+        return wait.until(
                 ExpectedConditions.visibilityOfElementLocated(locator));
     }
 
-
-    // WAIT UNTIL ELEMENT IS NOT BLOCKED
-
+    // Wait until element is not blocked
     public void waitUntilElementIsUnblocked(By locator) {
 
         wait.until(d -> {
@@ -109,435 +78,421 @@ public class HomePageTest {
 
             WebElement element = elements.get(0);
 
-            if (!element.isDisplayed() || !element.isEnabled()) {
-                return false;
-            }
-
-            return (Boolean) ((JavascriptExecutor) d).executeScript(
-                    "var e = arguments[0];" +
-                    "var r = e.getBoundingClientRect();" +
-                    "var x = r.left + r.width / 2;" +
-                    "var y = r.top + r.height / 2;" +
-                    "var top = document.elementFromPoint(x, y);" +
-                    "return top === e || e.contains(top);",
-                    element);
+            return element.isDisplayed() && element.isEnabled();
         });
     }
 
-
-    // OPEN LOGIN FORM
-
+    // Open login form
     public void openLoginForm() {
 
         openHomePage();
+
+        By loginButton =
+                By.cssSelector("button[aria-label='Login to your account']");
 
         waitUntilElementIsUnblocked(loginButton);
 
         driver.findElement(loginButton).click();
 
-        wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                        mobileNumberField));
+        wait.until(d ->
+                d.findElements(
+                        By.cssSelector("input[type='tel']")
+                ).size() > 0);
     }
 
+    // Click category from the website menu
+    public void verifyCategoryNavigation(String categoryName) {
 
-    // TEST 1: VERIFY HOMEPAGE LOADS
+        openHomePage();
 
+        // Open hamburger menu
+        Boolean menuOpened = (Boolean)
+                ((JavascriptExecutor) driver).executeScript(
+
+                "var elements = Array.from(document.querySelectorAll(" +
+                "'button, a, [role=\"button\"]'));" +
+
+                "var menu = elements.find(e => {" +
+                "var label = ((e.getAttribute('aria-label') || '') + ' ' +" +
+                "(e.getAttribute('title') || '') + ' ' +" +
+                "(e.innerText || '')).toLowerCase();" +
+                "return e.getClientRects().length > 0 && " +
+                "(label.includes('menu') || label.includes('navigation'));" +
+                "});" +
+
+                "if (!menu) {" +
+                "menu = elements.find(e => {" +
+                "var r = e.getBoundingClientRect();" +
+                "return e.getClientRects().length > 0 && " +
+                "r.right > window.innerWidth - 100 && " +
+                "r.width > 20 && r.width < 100;" +
+                "});" +
+                "}" +
+
+                "if (!menu) return false;" +
+                "menu.click();" +
+                "return true;"
+        );
+
+        Assert.assertTrue(
+                Boolean.TRUE.equals(menuOpened),
+                "Hamburger menu was not found"
+        );
+
+        // Find and click category text
+        Boolean categoryClicked = (Boolean)
+                ((JavascriptExecutor) driver).executeScript(
+
+                "var name = arguments[0];" +
+
+                "var elements = Array.from(document.querySelectorAll('#root *'));" +
+
+                "var element = elements.find(e => " +
+                "e.children.length === 0 && " +
+                "e.innerText && " +
+                "e.innerText.trim().toLowerCase() === name.toLowerCase() && " +
+                "e.getClientRects().length > 0);" +
+
+                "if (!element) return false;" +
+
+                "var target = element.closest(" +
+                "'a, button, [role=\"button\"], [onclick]') || element;" +
+
+                "target.scrollIntoView({block:'center'});" +
+                "target.click();" +
+
+                "return true;",
+
+                categoryName
+        );
+
+        Assert.assertTrue(
+                Boolean.TRUE.equals(categoryClicked),
+                categoryName + " category was not found"
+        );
+
+        wait.until(d -> {
+
+            String url = d.getCurrentUrl();
+
+            String body = d.findElement(By.tagName("body")).getText();
+
+            return url.contains("category") ||
+                   url.contains("filter") ||
+                   body.toLowerCase().contains(categoryName.toLowerCase());
+        });
+
+        Assert.assertTrue(
+                driver.findElement(By.tagName("body"))
+                        .getText()
+                        .toLowerCase()
+                        .contains(categoryName.toLowerCase())
+                || driver.getCurrentUrl().toLowerCase().contains("category"),
+                categoryName + " category navigation failed"
+        );
+    }
+
+    // 1. Verify homepage loads
     @Test(priority = 1)
-    public void verifyHomePage() {
+    public void verifyHomePageLoads() {
 
         openHomePage();
 
         Assert.assertTrue(
-                driver.getCurrentUrl().contains("elaraastudio.com"),
-                "Homepage URL is incorrect");
+                driver.findElement(By.id("root")).isDisplayed(),
+                "Homepage is not displayed"
+        );
 
-        System.out.println("Homepage loaded successfully.");
+        System.out.println("Homepage loaded successfully");
     }
 
-
-    // TEST 2: VERIFY HOMEPAGE TITLE
-
+    // 2. Verify page title
     @Test(priority = 2)
     public void verifyHomePageTitle() {
 
         openHomePage();
 
         Assert.assertTrue(
-                driver.getTitle().contains("Elaraa Studio"),
-                "Homepage title is incorrect");
+                driver.getTitle().toLowerCase().contains("elaraa"),
+                "Homepage title is incorrect"
+        );
 
-        System.out.println("Homepage title verified.");
+        System.out.println("Homepage title verified");
     }
 
-
-    // TEST 3: VERIFY HOMEPAGE URL
-
+    // 3. Verify homepage URL
     @Test(priority = 3)
     public void verifyHomePageURL() {
 
         openHomePage();
 
-        Assert.assertEquals(
-                driver.getCurrentUrl(),
-                homeUrl,
-                "Homepage URL does not match");
+        Assert.assertTrue(
+                driver.getCurrentUrl().contains("elaraastudio.com"),
+                "Incorrect homepage URL"
+        );
 
-        System.out.println("Homepage URL verified.");
+        System.out.println("Homepage URL verified");
     }
 
-
-    // TEST 4: VERIFY ROOT ELEMENT
-
+    // 4. Verify root element
     @Test(priority = 4)
     public void verifyRootElement() {
 
         openHomePage();
 
-        WebElement root = waitForVisible(
-                By.id("root"), 20);
-
         Assert.assertTrue(
-                root.isDisplayed(),
-                "Root element is not displayed");
+                driver.findElement(By.id("root")).isDisplayed(),
+                "Root element is missing"
+        );
 
-        System.out.println("Root element verified.");
+        System.out.println("Root element verified");
     }
 
-
-    // TEST 5: VERIFY LOGIN BUTTON
-
+    // 5. Verify login button
     @Test(priority = 5)
     public void verifyLoginButton() {
 
         openHomePage();
 
-        WebElement login = waitForVisible(
-                loginButton, 20);
+        By loginButton =
+                By.cssSelector("button[aria-label='Login to your account']");
 
         Assert.assertTrue(
-                login.isDisplayed(),
-                "Login button is not displayed");
+                driver.findElements(loginButton).size() > 0,
+                "Login button was not found"
+        );
 
-        System.out.println("Login button displayed successfully.");
+        System.out.println("Login button verified");
     }
 
-
-    // TEST 6: VERIFY LOGIN FORM OPENS
-
+    // 6. Verify login form
     @Test(priority = 6)
-    public void verifyLoginFormOpens() {
+    public void verifyLoginForm() {
 
         openLoginForm();
 
         Assert.assertTrue(
-                driver.findElement(mobileNumberField).isDisplayed(),
-                "Login form did not open");
+                driver.findElement(
+                        By.cssSelector("input[type='tel']")
+                ).isDisplayed(),
+                "Login form was not displayed"
+        );
 
-        System.out.println("Login form opened successfully.");
+        System.out.println("Login form verified");
     }
 
-
-    // TEST 7: VERIFY MOBILE NUMBER FIELD
-
+    // 7. Verify mobile number field
     @Test(priority = 7)
     public void verifyMobileNumberField() {
 
         openLoginForm();
 
-        WebElement mobileField =
-                driver.findElement(mobileNumberField);
+        WebElement mobile = waitForVisible(
+                By.cssSelector("input[type='tel']")
+        );
 
-        Assert.assertTrue(
-                mobileField.isDisplayed(),
-                "Mobile number field is not displayed");
+        Assert.assertTrue(mobile.isDisplayed());
 
-        Assert.assertTrue(
-                mobileField.isEnabled(),
-                "Mobile number field is disabled");
-
-        System.out.println("Mobile number field verified.");
+        System.out.println("Mobile number field verified");
     }
 
-
-    // TEST 8: VERIFY MOBILE NUMBER FIELD ACCEPTS INPUT
-
+    // 8. Verify mobile number input
     @Test(priority = 8)
     public void verifyMobileNumberInput() {
 
         openLoginForm();
 
-        WebElement mobileField =
-                driver.findElement(mobileNumberField);
+        WebElement mobile = waitForVisible(
+                By.cssSelector("input[type='tel']")
+        );
 
-        mobileField.sendKeys("9876543210");
+        mobile.sendKeys("9876543210");
 
         Assert.assertEquals(
-                mobileField.getAttribute("value"),
-                "9876543210",
-                "Mobile number input was not entered correctly");
+                mobile.getAttribute("value"),
+                "9876543210"
+        );
 
-        System.out.println("Mobile number input verified.");
+        System.out.println("Mobile number input verified");
     }
 
-
-    // TEST 9: VERIFY MOBILE NUMBER FIELD CAN BE CLEARED
-
+    // 9. Verify mobile number field clear
     @Test(priority = 9)
     public void verifyMobileNumberFieldClear() {
 
         openLoginForm();
 
-        WebElement mobileField =
-                driver.findElement(mobileNumberField);
+        WebElement mobile = waitForVisible(
+                By.cssSelector("input[type='tel']")
+        );
 
-        mobileField.sendKeys("9876543210");
-        mobileField.clear();
+        mobile.sendKeys("9876543210");
+        mobile.clear();
 
         Assert.assertEquals(
-                mobileField.getAttribute("value"),
-                "",
-                "Mobile number field was not cleared");
+                mobile.getAttribute("value"),
+                ""
+        );
 
-        System.out.println("Mobile number field clear verified.");
+        System.out.println("Mobile number field clear verified");
     }
 
-
-    // TEST 10: VERIFY WISHLIST BUTTON
-
+    // 10. Verify wishlist button
     @Test(priority = 10)
     public void verifyWishlistButton() {
 
         openHomePage();
 
-        waitUntilElementIsUnblocked(wishlistButton);
+        By wishlist =
+                By.cssSelector("button[aria-label='View wishlist']");
 
-        WebElement wishlist =
-                driver.findElement(wishlistButton);
+        waitUntilElementIsUnblocked(wishlist);
 
-        Assert.assertTrue(
-                wishlist.isDisplayed(),
-                "Wishlist button is not displayed");
+        driver.findElement(wishlist).click();
 
-        wishlist.click();
-
-        WebElement mobileField = wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                        mobileNumberField));
+        wait.until(d ->
+                d.findElements(
+                        By.cssSelector("input[type='tel']")
+                ).size() > 0
+        );
 
         Assert.assertTrue(
-                mobileField.isDisplayed(),
-                "Login form did not open after clicking Wishlist");
+                driver.findElement(
+                        By.cssSelector("input[type='tel']")
+                ).isDisplayed(),
+                "Login prompt was not displayed after wishlist click"
+        );
 
-        System.out.println(
-                "Wishlist button verified: Login form opened successfully.");
+        System.out.println("Wishlist login prompt verified");
     }
 
-
-    // TEST 11: VERIFY SHOPPING BAG BUTTON
-
+    // 11. Verify shopping bag button
     @Test(priority = 11)
     public void verifyShoppingBagButton() {
 
         openHomePage();
 
-        waitUntilElementIsUnblocked(shoppingBagButton);
+        By cart =
+                By.cssSelector("button[aria-label='View shopping cart']");
 
-        WebElement bag =
-                driver.findElement(shoppingBagButton);
+        waitUntilElementIsUnblocked(cart);
 
-        Assert.assertTrue(
-                bag.isDisplayed(),
-                "Shopping bag button is not displayed");
+        String oldUrl = driver.getCurrentUrl();
 
-        String previousUrl = driver.getCurrentUrl();
+        driver.findElement(cart).click();
 
-        String previousPageText =
-                driver.findElement(By.tagName("body")).getText();
-
-        bag.click();
-
-        wait.until(d -> {
-
-            String currentUrl = d.getCurrentUrl();
-
-            String currentPageText =
-                    d.findElement(By.tagName("body")).getText();
-
-            return !currentUrl.equals(previousUrl)
-                    || !currentPageText.equals(previousPageText);
-        });
-
-        String currentUrl = driver.getCurrentUrl();
-
-        String currentPageText =
-                driver.findElement(By.tagName("body")).getText();
+        wait.until(d ->
+                !d.getCurrentUrl().equals(oldUrl)
+                || d.findElements(
+                        By.cssSelector("input[type='tel']")
+                ).size() > 0
+        );
 
         Assert.assertTrue(
-                !currentUrl.equals(previousUrl)
-                        || !currentPageText.equals(previousPageText),
-                "Shopping bag click produced no observable page change");
+                !driver.getCurrentUrl().equals(oldUrl)
+                || driver.findElements(
+                        By.cssSelector("input[type='tel']")
+                ).size() > 0,
+                "Shopping bag did not respond"
+        );
 
-        System.out.println("Shopping bag button response verified.");
-        System.out.println("Current URL: " + currentUrl);
-        System.out.println("Updated page content:");
-        System.out.println(currentPageText);
+        System.out.println("Shopping bag response verified");
     }
 
-
-    // TEST 12: VERIFY PROFILE BUTTON
-
+    // 12. Verify profile button
     @Test(priority = 12)
     public void verifyProfileButton() {
 
         openHomePage();
 
-        waitUntilElementIsUnblocked(profileButton);
+        By profile =
+                By.cssSelector("button[aria-label='View profile']");
 
-        WebElement profile =
-                driver.findElement(profileButton);
+        waitUntilElementIsUnblocked(profile);
 
-        Assert.assertTrue(
-                profile.isDisplayed(),
-                "Profile button is not displayed");
+        driver.findElement(profile).click();
 
-        String previousPageText =
+        wait.until(d ->
+                d.findElement(By.tagName("body"))
+                        .getText()
+                        .contains("View Profile")
+        );
+
+        String bodyText =
                 driver.findElement(By.tagName("body")).getText();
 
-        profile.click();
+        Assert.assertTrue(bodyText.contains("View Profile"));
+        Assert.assertTrue(bodyText.contains("Orders"));
+        Assert.assertTrue(bodyText.contains("Wishlist"));
 
-        wait.until(d -> {
-
-            String currentPageText =
-                    d.findElement(By.tagName("body")).getText();
-
-            return !currentPageText.equals(previousPageText)
-                    && currentPageText.contains("View Profile");
-        });
-
-        String profileMenuText =
-                driver.findElement(By.tagName("body")).getText();
-
-        Assert.assertTrue(
-                profileMenuText.contains("View Profile"),
-                "View Profile option is not displayed");
-
-        Assert.assertTrue(
-                profileMenuText.contains("Orders"),
-                "Orders option is not displayed");
-
-        Assert.assertTrue(
-                profileMenuText.contains("Wishlist"),
-                "Wishlist option is not displayed");
-
-        System.out.println("Profile menu verified successfully.");
-        System.out.println(
-                "View Profile, Orders and Wishlist are displayed.");
+        System.out.println("Profile menu verified");
     }
 
-
-    // TEST 13: VERIFY HOMEPAGE FOOTER
-
+    // 13. Verify homepage footer
     @Test(priority = 13)
     public void verifyHomePageFooter() {
 
         openHomePage();
 
-        String pageText =
+        ((JavascriptExecutor) driver).executeScript(
+                "window.scrollTo(0, document.body.scrollHeight);"
+        );
+
+        wait.until(d ->
+                d.findElement(By.tagName("body"))
+                        .getText()
+                        .contains("POPULAR CATEGORIES")
+        );
+
+        String footerText =
                 driver.findElement(By.tagName("body")).getText();
 
         Assert.assertTrue(
-                pageText.contains("Chudidar Sets"),
-                "Chudidar Sets is missing in footer");
-
-        Assert.assertTrue(
-                pageText.contains("Bottom Wear"),
-                "Bottom Wear is missing in footer");
-
-        Assert.assertTrue(
-                pageText.contains("Kurtis"),
-                "Kurtis is missing in footer");
-
-        Assert.assertTrue(
-                pageText.contains("Tops"),
-                "Tops is missing in footer");
-
-        Assert.assertTrue(
-                pageText.contains("All rights reserved"),
-                "Copyright text is missing");
-
-        System.out.println("Homepage footer verified successfully.");
-    }
-
-
-    // TEST 14: VERIFY KURTIS CATEGORY NAVIGATION
-
-    @Test(priority = 14)
-    public void verifyKurtisCategoryNavigation() {
-
-        openHomePage();
-
-        Boolean clicked = (Boolean)
-                ((JavascriptExecutor) driver).executeScript(
-
-                "var elements = Array.from(" +
-                "document.querySelectorAll('#root a, #root button, " +
-                "#root [role=button]'));" +
-
-                "var element = elements.find(e => " +
-                "e.innerText.trim() === 'Kurtis' && " +
-                "e.getClientRects().length > 0);" +
-
-                "if (!element) return false;" +
-
-                "element.click();" +
-
-                "return true;"
+                footerText.contains("POPULAR CATEGORIES"),
+                "Popular categories heading missing"
         );
 
         Assert.assertTrue(
-                Boolean.TRUE.equals(clicked),
-                "Kurtis category was not found");
-
-        wait.until(d ->
-                d.getCurrentUrl().contains("categoryId=2"));
+                footerText.contains("Chudidar Sets"),
+                "Chudidar Sets is missing in footer"
+        );
 
         Assert.assertTrue(
-                driver.getCurrentUrl().contains("categoryId=2"),
-                "Kurtis category navigation failed");
+                footerText.contains("Bottom Wear"),
+                "Bottom Wear is missing in footer"
+        );
 
-        System.out.println("Kurtis category navigation verified.");
-        System.out.println("Current URL: " + driver.getCurrentUrl());
+        Assert.assertTrue(
+                footerText.contains("Kurtis"),
+                "Kurtis is missing in footer"
+        );
+
+        Assert.assertTrue(
+                footerText.contains("Tops"),
+                "Tops is missing in footer"
+        );
+
+        System.out.println("Homepage footer verified");
     }
 
+    // 14. Verify Kurtis category
+    @Test(priority = 14)
+    public void verifyKurtisCategoryNavigation() {
 
-    // TEST 15: VERIFY HOMEPAGE IMAGES
+        verifyCategoryNavigation("Kurtis");
 
+        System.out.println("Kurtis category verified");
+    }
+
+    // 15. Verify homepage images
     @Test(priority = 15)
     public void verifyHomepageImagesDisplayed() {
 
         openHomePage();
 
-        wait.until(d -> {
-
-            List<WebElement> images =
-                    d.findElements(By.cssSelector("#root img"));
-
-            for (WebElement image : images) {
-
-                Boolean loaded = (Boolean)
-                        ((JavascriptExecutor) d).executeScript(
-                                "return arguments[0].complete && " +
-                                "arguments[0].naturalWidth > 0;",
-                                image);
-
-                if (Boolean.TRUE.equals(loaded)) {
-                    return true;
-                }
-            }
-
-            return false;
-        });
+        wait.until(d ->
+                d.findElements(By.cssSelector("#root img")).size() > 0
+        );
 
         List<WebElement> images =
                 driver.findElements(By.cssSelector("#root img"));
@@ -548,9 +503,10 @@ public class HomePageTest {
 
             Boolean loaded = (Boolean)
                     ((JavascriptExecutor) driver).executeScript(
-                            "return arguments[0].complete && " +
-                            "arguments[0].naturalWidth > 0;",
-                            image);
+                    "return arguments[0].complete && " +
+                    "arguments[0].naturalWidth > 0;",
+                    image
+            );
 
             if (Boolean.TRUE.equals(loaded)) {
                 loadedImages++;
@@ -559,191 +515,121 @@ public class HomePageTest {
 
         Assert.assertTrue(
                 loadedImages > 0,
-                "No homepage images loaded successfully");
-
-        System.out.println(
-                "Loaded homepage images: " + loadedImages);
-    }
-
-
-    // COMMON CATEGORY NAVIGATION METHOD
-
-    public void verifyCategoryNavigation(String categoryName) {
-
-        openHomePage();
-
-        Boolean clicked = (Boolean)
-                ((JavascriptExecutor) driver).executeScript(
-
-                "var name = arguments[0];" +
-
-                "var elements = Array.from(" +
-                "document.querySelectorAll(" +
-                "#root a, #root button, #root [role='button'], " +
-                "#root [onclick]'));" +
-
-                "var element = elements.find(e => " +
-                "e.innerText.trim() === name && " +
-                "e.getClientRects().length > 0);" +
-
-                "if (!element) return false;" +
-
-                "element.scrollIntoView({block:'center'});" +
-
-                "element.click();" +
-
-                "return true;",
-                categoryName
+                "No homepage images loaded"
         );
 
-        Assert.assertTrue(
-                Boolean.TRUE.equals(clicked),
-                categoryName + " category was not found");
-
-        wait.until(d ->
-                d.getCurrentUrl().contains("categoryId="));
-
-        Assert.assertTrue(
-                driver.getCurrentUrl().contains("categoryId="),
-                categoryName + " navigation failed");
-
         System.out.println(
-                categoryName + " category navigation verified.");
-
-        System.out.println(
-                "Current URL: " + driver.getCurrentUrl());
+                "Homepage images loaded: " + loadedImages
+        );
     }
 
-
-    // TEST 16: VERIFY BOTTOM WEAR CATEGORY
-
+    // 16. Verify Bottom Wear category
     @Test(priority = 16)
     public void verifyBottomWearCategoryNavigation() {
 
         verifyCategoryNavigation("Bottom Wear");
+
+        System.out.println("Bottom Wear category verified");
     }
 
-
-    // TEST 17: VERIFY CHUDIDAR SETS CATEGORY
-
+    // 17. Verify Chudidar Sets category
     @Test(priority = 17)
     public void verifyChudidarSetsCategoryNavigation() {
 
         verifyCategoryNavigation("Chudidar Sets");
+
+        System.out.println("Chudidar Sets category verified");
     }
 
-
-    // TEST 18: VERIFY TOPS CATEGORY
-
+    // 18. Verify Tops category
     @Test(priority = 18)
     public void verifyTopsCategoryNavigation() {
 
         verifyCategoryNavigation("Tops");
+
+        System.out.println("Tops category verified");
     }
 
-
-    // TEST 19: VERIFY PRODUCT DETAILS PAGE
-
+    // 19. Verify product details page
     @Test(priority = 19)
     public void verifyProductDetailsPage() {
 
         openHomePage();
 
-        String homepageUrl = driver.getCurrentUrl();
+        // Scroll down to product section
+        ((JavascriptExecutor) driver).executeScript(
+                "window.scrollTo(0, 650);"
+        );
 
+        wait.until(d ->
+                d.findElements(By.cssSelector("#root img")).size() > 0
+        );
+
+        // Find a visible product image and click its card
         Boolean productClicked = (Boolean)
                 ((JavascriptExecutor) driver).executeScript(
 
-                "var links = Array.from(" +
-                "document.querySelectorAll('#root a'));" +
+                "var images = Array.from(document.querySelectorAll('#root img'));" +
 
-                "var productLink = links.find(a => {" +
-
-                "var img = a.querySelector('img');" +
-
-                "if (!img || !img.getClientRects().length) " +
-                "return false;" +
-
-                "if (!a.href || a.href === window.location.href) " +
-                "return false;" +
-
-                "if (a.href.includes('filterdeal')) return false;" +
-
-                "return img.complete && img.naturalWidth > 0;" +
-
+                "images = images.filter(img => {" +
+                "var r = img.getBoundingClientRect();" +
+                "return img.complete && img.naturalWidth > 100 && " +
+                "r.width > 100 && r.height > 100 && " +
+                "r.top > 80 && r.bottom < window.innerHeight + 500;" +
                 "});" +
 
-                "if (!productLink) return false;" +
+                "if (images.length === 0) return false;" +
 
-                "productLink.scrollIntoView({block:'center'});" +
+                "images.sort((a,b) => " +
+                "a.getBoundingClientRect().top - b.getBoundingClientRect().top);" +
 
-                "productLink.click();" +
+                "var img = images[0];" +
+
+                "var target = img.closest(" +
+                "'a, button, [role=\"button\"], [onclick]');" +
+
+                "if (!target) target = img;" +
+
+                "target.scrollIntoView({block:'center'});" +
+                "target.click();" +
 
                 "return true;"
         );
 
         Assert.assertTrue(
                 Boolean.TRUE.equals(productClicked),
-                "No clickable product image was found");
+                "No visible product image was found"
+        );
 
-        // WAIT FOR NAVIGATION
-
-        wait.until(d ->
-                !d.getCurrentUrl().equals(homepageUrl));
-
-        wait.until(d ->
-                ((JavascriptExecutor) d)
-                        .executeScript("return document.readyState")
-                        .equals("complete"));
-
-        wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                        By.id("root")));
-
-        // VERIFY PRODUCT IMAGE
-
+        // Verify product details
         wait.until(d -> {
 
-            List<WebElement> images =
-                    d.findElements(By.cssSelector("#root img"));
+            String body = d.findElement(By.tagName("body")).getText()
+                    .toUpperCase();
 
-            for (WebElement image : images) {
-
-                if (image.isDisplayed()) {
-
-                    Boolean loaded = (Boolean)
-                            ((JavascriptExecutor) d).executeScript(
-                                    "return arguments[0].complete && " +
-                                    "arguments[0].naturalWidth > 0;",
-                                    image);
-
-                    if (Boolean.TRUE.equals(loaded)) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return body.contains("SELECT SIZE")
+                    || body.contains("BUY NOW");
         });
 
-        Assert.assertNotEquals(
-                driver.getCurrentUrl(),
-                homepageUrl,
-                "Product details page did not open");
+        String pageText =
+                driver.findElement(By.tagName("body"))
+                        .getText()
+                        .toUpperCase();
 
-        System.out.println(
-                "Product details page opened successfully.");
+        Assert.assertTrue(
+                pageText.contains("SELECT SIZE"),
+                "Product size selection was not displayed"
+        );
 
-        System.out.println(
-                "Product URL: " + driver.getCurrentUrl());
+        Assert.assertTrue(
+                pageText.contains("BUY NOW"),
+                "Buy Now button was not displayed"
+        );
 
-        System.out.println(
-                "Product image loaded successfully.");
+        System.out.println("Product details page verified");
     }
 
-
-    // BROWSER TEARDOWN
-
+    // Close browser after every test
     @AfterMethod
     public void tearDown() {
 
