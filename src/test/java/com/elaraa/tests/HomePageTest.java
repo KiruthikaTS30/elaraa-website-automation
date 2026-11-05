@@ -752,13 +752,33 @@ public void verifyProductQuantityIncrease() {
             ExpectedConditions.visibilityOfElementLocated(
                     By.id("root")));
 
-    By increaseQuantityButton = By.cssSelector(
-            "button.cell-qty-btn[aria-label='Increase quantity']");
+    // Select size M first
+    By mediumSize = By.xpath(
+            "//div[contains(@class,'modern-variant-option-card')]" +
+            "[.//span[contains(@class,'option-text-label') " +
+            "and normalize-space()='M']]"
+    );
+
+    WebElement sizeM = wait.until(
+            ExpectedConditions.elementToBeClickable(mediumSize));
+
+    sizeM.click();
+
+    // Locate quantity increase button
+    By increaseButton =
+            By.cssSelector("button[aria-label='Increase quantity']");
 
     WebElement plusButton = wait.until(
-            ExpectedConditions.elementToBeClickable(
-                    increaseQuantityButton));
+            ExpectedConditions.visibilityOfElementLocated(increaseButton));
 
+    ((JavascriptExecutor) driver).executeScript(
+            "arguments[0].scrollIntoView({block:'center'});",
+            plusButton);
+
+    wait.until(
+            ExpectedConditions.elementToBeClickable(increaseButton));
+
+    // Get quantity before clicking
     WebElement quantityContainer =
             plusButton.findElement(By.xpath(".."));
 
@@ -766,14 +786,19 @@ public void verifyProductQuantityIncrease() {
 
     plusButton.click();
 
-    wait.until(d ->
-            !d.findElement(increaseQuantityButton)
-                    .findElement(By.xpath(".."))
-                    .getText()
-                    .equals(beforeClick));
+    // Verify quantity changed
+    wait.until(d -> {
+
+        WebElement button = d.findElement(increaseButton);
+
+        String afterClick =
+                button.findElement(By.xpath("..")).getText();
+
+        return !afterClick.equals(beforeClick);
+    });
 
     String afterClick = driver
-            .findElement(increaseQuantityButton)
+            .findElement(increaseButton)
             .findElement(By.xpath(".."))
             .getText();
 
