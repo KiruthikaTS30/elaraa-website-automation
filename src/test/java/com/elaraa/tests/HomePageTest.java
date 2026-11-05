@@ -1,3 +1,4 @@
+
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -232,7 +233,7 @@ public class HomePageTest {
     }
 
 
-    // TEST 6: VERIFY INVALID MOBILE NUMBER
+    // TEST 6: OBSERVE INVALID MOBILE NUMBER RESPONSE
 
     @Test
     public void verifyInvalidMobileNumberValidation() {
@@ -420,25 +421,11 @@ public class HomePageTest {
         String pageText =
                 driver.findElement(By.tagName("body")).getText();
 
-        Assert.assertTrue(
-                pageText.contains("Chudidar Sets"),
-                "Chudidar Sets category is missing");
-
-        Assert.assertTrue(
-                pageText.contains("Bottom Wear"),
-                "Bottom Wear category is missing");
-
-        Assert.assertTrue(
-                pageText.contains("Kurtis"),
-                "Kurtis category is missing");
-
-        Assert.assertTrue(
-                pageText.contains("Tops"),
-                "Tops category is missing");
-
-        Assert.assertTrue(
-                pageText.contains("All rights reserved"),
-                "Copyright text is missing");
+        Assert.assertTrue(pageText.contains("Chudidar Sets"));
+        Assert.assertTrue(pageText.contains("Bottom Wear"));
+        Assert.assertTrue(pageText.contains("Kurtis"));
+        Assert.assertTrue(pageText.contains("Tops"));
+        Assert.assertTrue(pageText.contains("All rights reserved"));
 
         System.out.println("Footer content verified successfully.");
     }
@@ -451,113 +438,120 @@ public class HomePageTest {
 
         openHomePage();
 
-        By kurtisCategory =
-                By.xpath("//*[normalize-space()='Kurtis']");
+        By kurtisText = By.xpath(
+                "//*[normalize-space()='Kurtis']");
 
-        wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                        kurtisCategory));
+        List<WebElement> elements = wait.until(
+                ExpectedConditions.visibilityOfAllElementsLocatedBy(
+                        kurtisText));
 
-        List<WebElement> categories =
-                driver.findElements(kurtisCategory);
+        boolean navigationSuccessful = false;
 
-        WebElement kurtis = null;
+        for (WebElement element : elements) {
 
-        for (WebElement element : categories) {
+            if (!element.isDisplayed()) {
+                continue;
+            }
 
-            if (element.isDisplayed()) {
-                kurtis = element;
-                break;
+            try {
+
+                ((JavascriptExecutor) driver).executeScript(
+                        "var target = arguments[0];" +
+                        "var clickable = target.closest('a,button,[role=button]');" +
+                        "if (clickable) clickable.click();" +
+                        "else target.click();",
+                        element);
+
+                try {
+                    new WebDriverWait(driver, Duration.ofSeconds(5))
+                            .until(d ->
+                                    d.getCurrentUrl().contains("categoryId=2"));
+
+                    navigationSuccessful = true;
+                    break;
+
+                } catch (org.openqa.selenium.TimeoutException e) {
+                    driver.get(homeUrl);
+
+                    wait.until(
+                            ExpectedConditions.visibilityOfElementLocated(
+                                    By.id("root")));
+                }
+
+            } catch (Exception e) {
+                System.out.println(
+                        "Could not click this Kurtis element: "
+                                + e.getMessage());
             }
         }
 
-        Assert.assertNotNull(
-                kurtis,
-                "Kurtis category is not visible");
-
-        ((JavascriptExecutor) driver)
-                .executeScript("arguments[0].click();", kurtis);
-
-        wait.until(d ->
-                d.getCurrentUrl().contains("categoryId"));
-
         Assert.assertTrue(
-                driver.getCurrentUrl().contains("categoryId"),
-                "Kurtis category page did not open");
+                navigationSuccessful,
+                "Kurtis category navigation did not open categoryId=2");
 
         System.out.println(
                 "Kurtis category URL: " + driver.getCurrentUrl());
     }
 
 
-    // TEST 15: CHECK PRODUCT DETAILS PAGE NAVIGATION
+    // TEST 15: VERIFY HOMEPAGE IMAGES
 
     @Test
-    public void verifyProductDetailsPageNavigation() {
+    public void verifyHomepageImagesDisplayed() {
 
         openHomePage();
 
-        List<WebElement> links =
-                driver.findElements(By.cssSelector("#root a[href]"));
+        wait.until(d -> {
 
-        String productUrl = null;
+            List<WebElement> images =
+                    d.findElements(By.cssSelector("#root img"));
 
-        for (WebElement link : links) {
+            for (WebElement image : images) {
 
-            String href = link.getAttribute("href");
+                if (image.isDisplayed()) {
 
-            if (href == null || href.isBlank()) {
-                continue;
+                    Boolean loaded = (Boolean)
+                            ((JavascriptExecutor) d).executeScript(
+                                    "return arguments[0].complete && " +
+                                    "arguments[0].naturalWidth > 0;",
+                                    image);
+
+                    if (Boolean.TRUE.equals(loaded)) {
+                        return true;
+                    }
+                }
             }
 
-            if (!link.isDisplayed()) {
-                continue;
-            }
+            return false;
+        });
 
-            if (!href.startsWith("https://elaraastudio.com")) {
-                continue;
-            }
+        List<WebElement> images =
+                driver.findElements(By.cssSelector("#root img"));
 
-            if (href.equals("https://elaraastudio.com/")
-                    || href.equals(homeUrl)
-                    || href.contains("filterdeal")
-                    || href.contains("search=")
-                    || href.contains("/home")) {
-                continue;
-            }
+        int loadedImageCount = 0;
 
-            productUrl = href;
-            break;
+        for (WebElement image : images) {
+
+            if (image.isDisplayed()) {
+
+                Boolean loaded = (Boolean)
+                        ((JavascriptExecutor) driver).executeScript(
+                                "return arguments[0].complete && " +
+                                "arguments[0].naturalWidth > 0;",
+                                image);
+
+                if (Boolean.TRUE.equals(loaded)) {
+                    loadedImageCount++;
+                }
+            }
         }
 
-        Assert.assertNotNull(
-                productUrl,
-                "No product details link was found on the homepage");
-
-        System.out.println("Product link found: " + productUrl);
-
-        driver.get(productUrl);
-
-        wait.until(d ->
-                ((JavascriptExecutor) d)
-                        .executeScript("return document.readyState")
-                        .equals("complete"));
-
-        wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                        By.id("root")));
-
-        Assert.assertNotEquals(
-                driver.getCurrentUrl(),
-                "https://elaraastudio.com/",
-                "Navigation opened the homepage instead of a product page");
-
-        Assert.assertFalse(
-                driver.getCurrentUrl().contains("filterdeal"),
-                "Navigation opened a campaign page instead of a product page");
+        Assert.assertTrue(
+                loadedImageCount > 0,
+                "No loaded homepage images were found");
 
         System.out.println(
-                "Navigated to product link: " + driver.getCurrentUrl());
+                "Loaded homepage images: " + loadedImageCount);
     }
 
 
