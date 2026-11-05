@@ -4,9 +4,9 @@ import java.time.Duration;
 import java.util.List;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -28,6 +28,12 @@ public class HomePageTest {
 
     By loadingOverlay = By.cssSelector(
         ".global-loading-overlay");
+
+    By mobileNumber = By.cssSelector(
+        "input[type='tel'][placeholder='Mobile Number*']");
+
+    By continueButton = By.xpath(
+        "//button[normalize-space()='CONTINUE']");
 
     @BeforeMethod
     public void setUp() {
@@ -233,6 +239,72 @@ public class HomePageTest {
 
         System.out.println(
             "PASS: Campaign page loaded");
+    }
+
+    @Test
+    public void verifyEmptyMobileNumberValidation() {
+
+        openHomePage();
+
+        waitUntilLoginIsUnblocked();
+
+        driver.findElement(loginButton).click();
+
+        WebElement mobile =
+            wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                    mobileNumber));
+
+        Assert.assertTrue(
+            mobile.getAttribute("value").isEmpty(),
+            "Mobile number field should be empty initially");
+
+        WebElement continueBtn =
+            wait.until(
+                ExpectedConditions.elementToBeClickable(
+                    continueButton));
+
+        continueBtn.click();
+
+        System.out.println(
+            "TEST: Empty mobile number validation");
+
+        System.out.println(
+            "Mobile number value: " +
+            mobile.getAttribute("value"));
+
+        System.out.println(
+            "Current URL: " +
+            driver.getCurrentUrl());
+
+        System.out.println(
+            "Validation message inspection:");
+
+        List<WebElement> messages =
+            driver.findElements(
+                By.cssSelector(
+                    "[role='alert'], .error, .error-message"));
+
+        boolean foundMessage = false;
+
+        for (WebElement message : messages) {
+
+            if (message.isDisplayed()
+                    && !message.getText().trim().isEmpty()) {
+
+                System.out.println(
+                    "Validation message: " +
+                    message.getText());
+
+                foundMessage = true;
+            }
+        }
+
+        if (!foundMessage) {
+
+            System.out.println(
+                "No visible validation message found by these locators.");
+        }
     }
 
     @AfterMethod(alwaysRun = true)
