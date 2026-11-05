@@ -56,50 +56,41 @@ public class HomePageTest {
     }
 
     @Test
-    public void inspectSearchElements() {
+public void inspectSearchElements() {
 
-        driver.get(
-            "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true"
-        );
+    driver.get(
+        "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true"
+    );
 
-        WebDriverWait wait = new WebDriverWait(
-            driver, Duration.ofSeconds(20)
-        );
+    WebDriverWait wait = new WebDriverWait(
+        driver, Duration.ofSeconds(20)
+    );
 
-        wait.until(d -> d.findElements(
-            By.cssSelector("input, textarea")
-        ).size() > 0);
+    wait.until(d -> d.findElements(
+        By.cssSelector("input, textarea")
+    ).size() > 0);
 
-        List<WebElement> elements = driver.findElements(
-            By.cssSelector("input, textarea")
-        );
+    List<WebElement> elements = driver.findElements(
+        By.cssSelector("input, textarea, button")
+    );
 
-        System.out.println("Total search-related fields: "
-            + elements.size());
+    for (WebElement element : elements) {
 
-        for (WebElement element : elements) {
+        System.out.println("Tag: " + element.getTagName());
+        System.out.println("Type: " +
+            element.getAttribute("type"));
+        System.out.println("Placeholder: " +
+            element.getAttribute("placeholder"));
+        System.out.println("ARIA label: " +
+            element.getAttribute("aria-label"));
+        System.out.println("Visible: " +
+            element.isDisplayed());
 
-            System.out.println("Tag: "
-                + element.getTagName());
+        System.out.println("--------------------");
+    }
+}
 
-            System.out.println("Type: "
-                + element.getAttribute("type"));
-
-            System.out.println("Placeholder: "
-                + element.getAttribute("placeholder"));
-
-            System.out.println("Name: "
-                + element.getAttribute("name"));
-
-            System.out.println("ID: "
-                + element.getAttribute("id"));
-
-            System.out.println("Visible: "
-                + element.isDisplayed());
-
-            System.out.println("--------------------");
-        }
-
+    
         Assert.assertTrue(
             elements.size() > 0,
             "Search page should contain an input field"
