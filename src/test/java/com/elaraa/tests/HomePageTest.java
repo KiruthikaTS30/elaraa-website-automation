@@ -1,3 +1,4 @@
+
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -8,7 +9,9 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -22,6 +25,7 @@ public class HomePageTest {
     public void setUp() {
 
         ChromeOptions options = new ChromeOptions();
+
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
@@ -29,6 +33,7 @@ public class HomePageTest {
         driver = new ChromeDriver(options);
     }
 
+    // TEST CASE 1: Verify Homepage
     @Test
     public void verifyHomePage() {
 
@@ -55,6 +60,7 @@ public class HomePageTest {
         );
     }
 
+    // TEST CASE 2: Inspect Search Elements
     @Test
     public void inspectSearchElements() {
 
@@ -99,6 +105,58 @@ public class HomePageTest {
         );
     }
 
+    // TEST CASE 3: Verify View Account Button
+    @Test
+    public void verifyViewAccountButton() {
+
+        driver.get("https://elaraastudio.com/home");
+
+        WebDriverWait wait = new WebDriverWait(
+            driver, Duration.ofSeconds(20)
+        );
+
+        WebElement accountButton = wait.until(
+            ExpectedConditions.elementToBeClickable(
+                By.cssSelector(
+                    "button[aria-label='View account']"
+                )
+            )
+        );
+
+        Assert.assertTrue(
+            accountButton.isDisplayed(),
+            "View Account button should be visible"
+        );
+
+        System.out.println(
+            "View Account button is visible"
+        );
+
+        accountButton.click();
+
+        // Wait for navigation or account panel
+        wait.until(d ->
+            !d.getCurrentUrl().equals(
+                "https://elaraastudio.com/home"
+            )
+            ||
+            d.findElements(
+                By.cssSelector(
+                    "[role='dialog'], [role='menu']"
+                )
+            ).stream().anyMatch(WebElement::isDisplayed)
+        );
+
+        System.out.println(
+            "View Account button clicked successfully"
+        );
+
+        System.out.println(
+            "Current URL: " + driver.getCurrentUrl()
+        );
+    }
+
+    // CLOSE BROWSER
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
 
