@@ -1,3 +1,4 @@
+
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -44,6 +45,18 @@ public class HomePageTest {
         "input[type='search']"
     );
 
+    By wishlistButton = By.cssSelector(
+        "button[aria-label='View wishlist']"
+    );
+
+    By bagButton = By.cssSelector(
+        "button[aria-label='View shopping cart']"
+    );
+
+    By profileButton = By.cssSelector(
+        "button[aria-label='View profile']"
+    );
+
     @BeforeMethod
     public void setUp() {
 
@@ -62,8 +75,6 @@ public class HomePageTest {
         );
     }
 
-    // Open homepage
-
     public void openHomePage() {
 
         driver.get("https://elaraastudio.com/home");
@@ -74,8 +85,6 @@ public class HomePageTest {
             )
         );
     }
-
-    // Wait until Login button is not blocked
 
     public void waitUntilLoginIsUnblocked() {
 
@@ -114,8 +123,6 @@ public class HomePageTest {
         }
     }
 
-    // Open Login form
-
     public void openLoginForm() {
 
         openHomePage();
@@ -131,7 +138,7 @@ public class HomePageTest {
         );
     }
 
-    // TEST 1: Verify homepage title and HTTPS
+    // TEST 1: Homepage title and HTTPS
 
     @Test
     public void verifyHomePage() {
@@ -140,17 +147,15 @@ public class HomePageTest {
 
         Assert.assertEquals(
             driver.getTitle(),
-            "Elaraa Studio",
-            "Homepage title is incorrect"
+            "Elaraa Studio"
         );
 
         Assert.assertTrue(
-            driver.getCurrentUrl().startsWith("https://"),
-            "Website is not using HTTPS"
+            driver.getCurrentUrl().startsWith("https://")
         );
     }
 
-    // TEST 2: Verify homepage Login content
+    // TEST 2: Homepage Login content
 
     @Test
     public void verifyHomePageContent() {
@@ -160,43 +165,32 @@ public class HomePageTest {
         WebElement login =
             driver.findElement(loginButton);
 
-        Assert.assertTrue(
-            login.isDisplayed(),
-            "Login button is not displayed"
-        );
+        Assert.assertTrue(login.isDisplayed());
 
         Assert.assertTrue(
-            login.getText().contains("Login"),
-            "Login button text is incorrect"
+            login.getText().contains("Login")
         );
 
         System.out.println(
-            "Homepage body: " +
             driver.findElement(By.tagName("body")).getText()
         );
     }
 
-    // TEST 3: Verify Login button functionality
+    // TEST 3: Login button functionality
 
     @Test
     public void verifyLoginButtonClick() {
 
         openLoginForm();
 
-        WebElement mobile =
-            driver.findElement(mobileNumber);
-
         Assert.assertTrue(
-            mobile.isDisplayed(),
-            "Mobile number field is not displayed"
+            driver.findElement(mobileNumber).isDisplayed()
         );
 
-        System.out.println(
-            "Login form opened successfully."
-        );
+        System.out.println("Login form opened successfully.");
     }
 
-    // TEST 4: Investigate Campaign page
+    // TEST 4: Campaign page investigation
 
     @Test
     public void verifyCampaignPageLoads() {
@@ -205,61 +199,38 @@ public class HomePageTest {
             "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true"
         );
 
-        WebDriverWait campaignWait =
-            new WebDriverWait(
-                driver,
-                Duration.ofSeconds(20)
-            );
-
-        WebElement root = campaignWait.until(
+        WebElement root = wait.until(
             ExpectedConditions.presenceOfElementLocated(
                 By.id("root")
             )
         );
 
         try {
-
-            campaignWait.until(d ->
+            new WebDriverWait(
+                driver,
+                Duration.ofSeconds(20)
+            ).until(d ->
                 !d.findElement(By.id("root"))
                     .getText().trim().isEmpty()
             );
-
         } catch (TimeoutException e) {
-
-            System.out.println(
-                "Campaign content did not appear within 20 seconds."
-            );
+            System.out.println("Campaign content wait timed out.");
         }
-
-        String rootText =
-            driver.findElement(By.id("root"))
-                .getText().trim();
 
         System.out.println(
             "Campaign URL: " + driver.getCurrentUrl()
         );
 
         System.out.println(
-            "Campaign root content: " + rootText
-        );
-
-        System.out.println(
-            "Campaign root HTML: " +
-            root.getAttribute("innerHTML")
+            "Campaign content: " + root.getText()
         );
 
         Assert.assertTrue(
-            driver.getCurrentUrl().contains("filterdeal"),
-            "Campaign URL is incorrect"
-        );
-
-        Assert.assertNotNull(
-            root,
-            "Campaign root element is missing"
+            driver.getCurrentUrl().contains("filterdeal")
         );
     }
 
-    // TEST 5: Verify empty mobile number validation
+    // TEST 5: Empty mobile validation
 
     @Test
     public void verifyEmptyMobileNumberValidation() {
@@ -271,30 +242,25 @@ public class HomePageTest {
 
         Assert.assertEquals(
             mobile.getAttribute("value"),
-            "",
-            "Mobile number field is not empty initially"
+            ""
         );
 
         driver.findElement(continueButton).click();
 
-        JavascriptExecutor js =
-            (JavascriptExecutor) driver;
+        boolean valid = (Boolean)
+            ((JavascriptExecutor) driver).executeScript(
+                "return arguments[0].validity.valid;",
+                mobile
+            );
 
-        boolean valid = (Boolean) js.executeScript(
-            "return arguments[0].validity.valid;",
-            mobile
-        );
-
-        String message = (String) js.executeScript(
-            "return arguments[0].validationMessage;",
-            mobile
-        );
+        String message = (String)
+            ((JavascriptExecutor) driver).executeScript(
+                "return arguments[0].validationMessage;",
+                mobile
+            );
 
         System.out.println("Input valid: " + valid);
-
-        System.out.println(
-            "Browser validation message: " + message
-        );
+        System.out.println("Validation message: " + message);
 
         Assert.assertFalse(
             valid,
@@ -302,7 +268,7 @@ public class HomePageTest {
         );
     }
 
-    // TEST 6: Investigate invalid mobile number
+    // TEST 6: Invalid mobile number investigation
 
     @Test
     public void verifyInvalidMobileNumberValidation() {
@@ -314,37 +280,18 @@ public class HomePageTest {
 
         mobile.sendKeys("12345");
 
-        System.out.println(
-            "Entered mobile number: " +
-            mobile.getAttribute("value")
-        );
-
         driver.findElement(continueButton).click();
 
-        JavascriptExecutor js =
-            (JavascriptExecutor) driver;
-
-        boolean valid = (Boolean) js.executeScript(
-            "return arguments[0].validity.valid;",
-            mobile
-        );
-
-        String message = (String) js.executeScript(
-            "return arguments[0].validationMessage;",
-            mobile
+        System.out.println(
+            "Entered number: " + mobile.getAttribute("value")
         );
 
         System.out.println(
-            "Browser validation valid: " + valid
-        );
-
-        System.out.println(
-            "Browser validation message: " + message
-        );
-
-        System.out.println(
-            "Final mobile number: " +
-            mobile.getAttribute("value")
+            "Browser validity: " +
+            ((JavascriptExecutor) driver).executeScript(
+                "return arguments[0].validity.valid;",
+                mobile
+            )
         );
 
         System.out.println(
@@ -353,7 +300,7 @@ public class HomePageTest {
         );
     }
 
-    // TEST 7: Verify search field visibility
+    // TEST 7: Search field visibility
 
     @Test
     public void verifySearchFieldVisibility() {
@@ -367,15 +314,8 @@ public class HomePageTest {
                 )
             );
 
-        Assert.assertTrue(
-            search.isDisplayed(),
-            "Search field is not displayed"
-        );
-
-        Assert.assertTrue(
-            search.isEnabled(),
-            "Search field is disabled"
-        );
+        Assert.assertTrue(search.isDisplayed());
+        Assert.assertTrue(search.isEnabled());
 
         System.out.println(
             "Search placeholder: " +
@@ -383,7 +323,7 @@ public class HomePageTest {
         );
     }
 
-    // TEST 8: Verify product search
+    // TEST 8: Product search
 
     @Test
     public void verifyProductSearch() {
@@ -398,48 +338,25 @@ public class HomePageTest {
             );
 
         search.sendKeys("shirt");
-
-        System.out.println(
-            "Entered search text: " +
-            search.getAttribute("value")
-        );
-
         search.sendKeys(Keys.ENTER);
 
-        try {
-
-            wait.until(d ->
-                !d.getCurrentUrl().equals(
-                    "https://elaraastudio.com/home"
-                )
-                || !d.findElement(By.tagName("body"))
-                    .getText().trim().isEmpty()
-            );
-
-        } catch (TimeoutException e) {
-
-            System.out.println(
-                "No visible search response detected within timeout."
-            );
-        }
-
         System.out.println(
-            "Search result URL: " + driver.getCurrentUrl()
+            "Search URL: " + driver.getCurrentUrl()
         );
 
         System.out.println(
-            "Search result page: " +
+            "Search page: " +
             driver.findElement(By.tagName("body")).getText()
         );
 
         Assert.assertTrue(
             search.getAttribute("value").equals("shirt")
             || driver.getCurrentUrl().toLowerCase().contains("search"),
-            "Search input or search navigation was not detected"
+            "Search text or search navigation was not detected"
         );
     }
 
-    // TEST 9: Verify empty search behaviour
+    // TEST 9: Empty search
 
     @Test
     public void verifyEmptySearch() {
@@ -455,29 +372,101 @@ public class HomePageTest {
 
         Assert.assertEquals(
             search.getAttribute("value"),
-            "",
-            "Search field is not empty initially"
+            ""
         );
 
         search.sendKeys(Keys.ENTER);
 
-        System.out.println(
-            "URL after empty search: " +
-            driver.getCurrentUrl()
-        );
+        Assert.assertTrue(search.isDisplayed());
 
         System.out.println(
-            "Page content after empty search: " +
-            driver.findElement(By.tagName("body")).getText()
-        );
-
-        Assert.assertTrue(
-            search.isDisplayed(),
-            "Search field disappeared after empty search"
+            "URL after empty search: " + driver.getCurrentUrl()
         );
     }
 
-    // Close browser after every test
+    // TEST 10: Wishlist button
+
+    @Test
+    public void verifyWishlistButton() {
+
+        openHomePage();
+
+        WebElement wishlist =
+            wait.until(
+                ExpectedConditions.elementToBeClickable(
+                    wishlistButton
+                )
+            );
+
+        Assert.assertTrue(wishlist.isDisplayed());
+
+        wishlist.click();
+
+        System.out.println(
+            "Wishlist URL: " + driver.getCurrentUrl()
+        );
+
+        System.out.println(
+            "Wishlist response: " +
+            driver.findElement(By.tagName("body")).getText()
+        );
+    }
+
+    // TEST 11: Shopping bag button
+
+    @Test
+    public void verifyShoppingBagButton() {
+
+        openHomePage();
+
+        WebElement bag =
+            wait.until(
+                ExpectedConditions.elementToBeClickable(
+                    bagButton
+                )
+            );
+
+        Assert.assertTrue(bag.isDisplayed());
+
+        bag.click();
+
+        System.out.println(
+            "Shopping bag URL: " + driver.getCurrentUrl()
+        );
+
+        System.out.println(
+            "Shopping bag response: " +
+            driver.findElement(By.tagName("body")).getText()
+        );
+    }
+
+    // TEST 12: Profile button
+
+    @Test
+    public void verifyProfileButton() {
+
+        openHomePage();
+
+        WebElement profile =
+            wait.until(
+                ExpectedConditions.elementToBeClickable(
+                    profileButton
+                )
+            );
+
+        Assert.assertTrue(profile.isDisplayed());
+
+        profile.click();
+
+        System.out.println(
+            "Profile URL: " + driver.getCurrentUrl()
+        );
+
+        System.out.println(
+            "Profile response: " +
+            driver.findElement(By.tagName("body")).getText()
+        );
+    }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
