@@ -2,6 +2,7 @@
 package com.elaraa.tests;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -67,7 +68,7 @@ public class HomePageTest {
         }
     }
 
-    // Open homepage without assuming Login button exists
+    // Open homepage
     private void openHomePage() {
 
         driver.get(homeUrl);
@@ -82,8 +83,7 @@ public class HomePageTest {
 
         wait.until(d -> {
             try {
-                WebElement pageRoot = d.findElement(root);
-                return pageRoot.isDisplayed();
+                return d.findElement(root).isDisplayed();
             } catch (NoSuchElementException e) {
                 return false;
             }
@@ -94,7 +94,7 @@ public class HomePageTest {
         System.out.println("Homepage opened.");
     }
 
-    // Wait for an element to be visible
+    // Wait for visible element
     private WebElement waitForVisible(By locator, int seconds) {
 
         WebDriverWait wait =
@@ -122,11 +122,9 @@ public class HomePageTest {
 
         wait.until(d -> {
 
-            try {
+            WebElement element = d.findElement(locator);
 
-                WebElement element = d.findElement(locator);
-
-                return (Boolean) ((JavascriptExecutor) d).executeScript(
+            return (Boolean) ((JavascriptExecutor) d).executeScript(
 
                     "const target = arguments[0];" +
                     "if (!target.isConnected) return false;" +
@@ -150,13 +148,7 @@ public class HomePageTest {
                     "return top === target || target.contains(top);",
 
                     element
-                );
-
-            } catch (StaleElementReferenceException |
-                     NoSuchElementException e) {
-
-                return false;
-            }
+            );
         });
     }
 
@@ -172,7 +164,7 @@ public class HomePageTest {
         waitForVisible(mobileNumberField, 20);
     }
 
-    // TEST 1: Verify homepage title and HTTPS
+    // TEST 1: Homepage title and HTTPS
     @Test
     public void verifyHomePage() {
 
@@ -190,7 +182,7 @@ public class HomePageTest {
         System.out.println("Homepage title and HTTPS verified.");
     }
 
-    // TEST 2: Verify homepage Login button
+    // TEST 2: Homepage Login button
     @Test
     public void verifyHomePageContent() {
 
@@ -207,7 +199,7 @@ public class HomePageTest {
         System.out.println("Homepage Login button verified.");
     }
 
-    // TEST 3: Verify Login button opens login form
+    // TEST 3: Login button click
     @Test
     public void verifyLoginButtonClick() {
 
@@ -220,7 +212,7 @@ public class HomePageTest {
         System.out.println("Login form opened successfully.");
     }
 
-    // TEST 4: Verify campaign page
+    // TEST 4: Campaign page
     @Test
     public void verifyCampaignPageLoads() {
 
@@ -242,12 +234,10 @@ public class HomePageTest {
                 "Campaign page URL is incorrect");
 
         System.out.println("Campaign URL: " + driver.getCurrentUrl());
-
-        System.out.println(
-                "Campaign content: " + pageRoot.getText());
+        System.out.println("Campaign content: " + pageRoot.getText());
     }
 
-    // TEST 5: Verify empty mobile number validation
+    // TEST 5: Empty mobile number validation
     @Test
     public void verifyEmptyMobileNumberValidation() {
 
@@ -280,7 +270,7 @@ public class HomePageTest {
                 "Empty mobile number should be rejected");
     }
 
-    // TEST 6: Inspect invalid mobile number behavior
+    // TEST 6: Invalid mobile number observation
     @Test
     public void verifyInvalidMobileNumberValidation() {
 
@@ -303,12 +293,9 @@ public class HomePageTest {
 
         System.out.println("Page response: " +
                 driver.findElement(root).getText());
-
-        // Observation only. Phone length validation
-        // must be checked against actual application requirements.
     }
 
-    // TEST 7: Verify search field visibility
+    // TEST 7: Search field visibility
     @Test
     public void verifySearchFieldVisibility() {
 
@@ -327,7 +314,7 @@ public class HomePageTest {
         System.out.println("Search field verified.");
     }
 
-    // TEST 8: Verify product search navigation
+    // TEST 8: Product search navigation
     @Test
     public void verifyProductSearch() {
 
@@ -355,7 +342,7 @@ public class HomePageTest {
                 driver.findElement(root).getText());
     }
 
-    // TEST 9: Verify empty search behavior
+    // TEST 9: Empty search behavior
     @Test
     public void verifyEmptySearch() {
 
@@ -373,7 +360,7 @@ public class HomePageTest {
                 driver.getCurrentUrl());
     }
 
-    // TEST 10: Verify Wishlist button click
+    // TEST 10: Wishlist button
     @Test
     public void verifyWishlistButton() {
 
@@ -390,7 +377,7 @@ public class HomePageTest {
                 driver.findElement(root).getText());
     }
 
-    // TEST 11: Verify Shopping Bag button click
+    // TEST 11: Shopping Bag button
     @Test
     public void verifyShoppingBagButton() {
 
@@ -407,7 +394,7 @@ public class HomePageTest {
                 driver.findElement(root).getText());
     }
 
-    // TEST 12: Verify Profile button click
+    // TEST 12: Profile button
     @Test
     public void verifyProfileButton() {
 
@@ -422,5 +409,145 @@ public class HomePageTest {
 
         System.out.println("Profile response: " +
                 driver.findElement(root).getText());
+    }
+
+    // TEST 13: Footer content validation
+    @Test
+    public void verifyFooterContent() {
+
+        openHomePage();
+
+        String pageText =
+                driver.findElement(By.tagName("body")).getText();
+
+        Assert.assertTrue(
+                pageText.contains("Chudidar Sets"),
+                "Chudidar Sets category is missing");
+
+        Assert.assertTrue(
+                pageText.contains("Bottom Wear"),
+                "Bottom Wear category is missing");
+
+        Assert.assertTrue(
+                pageText.contains("Kurtis"),
+                "Kurtis category is missing");
+
+        Assert.assertTrue(
+                pageText.contains("Tops"),
+                "Tops category is missing");
+
+        Assert.assertTrue(
+                pageText.contains("All rights reserved"),
+                "Copyright text is missing");
+
+        System.out.println("Footer content verified.");
+    }
+
+    // TEST 14: Kurtis category navigation
+    @Test
+    public void verifyKurtisCategoryNavigation() {
+
+        openHomePage();
+
+        By kurtisLink = By.xpath(
+                "//*[self::a or self::button]" +
+                "[normalize-space()='Kurtis']");
+
+        WebElement kurtis = waitForVisible(kurtisLink, 20);
+
+        String oldUrl = driver.getCurrentUrl();
+
+        kurtis.click();
+
+        WebDriverWait wait =
+                new WebDriverWait(driver, Duration.ofSeconds(20));
+
+        wait.until(d ->
+                !d.getCurrentUrl().equals(oldUrl));
+
+        Assert.assertNotEquals(
+                driver.getCurrentUrl(),
+                oldUrl,
+                "Kurtis category navigation did not change the URL");
+
+        System.out.println("Kurtis category URL: " +
+                driver.getCurrentUrl());
+    }
+
+    // TEST 15: Product details page navigation
+    @Test
+    public void verifyProductDetailsPageNavigation() {
+
+        openHomePage();
+
+        WebDriverWait wait =
+                new WebDriverWait(driver, Duration.ofSeconds(20));
+
+        wait.until(d ->
+                d.findElements(By.cssSelector("#root a[href]"))
+                        .stream()
+                        .anyMatch(a -> {
+                            try {
+                                return a.isDisplayed()
+                                        && !a.findElements(By.tagName("img")).isEmpty()
+                                        && a.getAttribute("href") != null
+                                        && a.getAttribute("href")
+                                                .contains("elaraastudio.com");
+                            } catch (StaleElementReferenceException e) {
+                                return false;
+                            }
+                        }));
+
+        List<WebElement> links =
+                driver.findElements(By.cssSelector("#root a[href]"));
+
+        WebElement productLink = null;
+
+        for (WebElement link : links) {
+
+            try {
+
+                String href = link.getAttribute("href");
+
+                boolean hasImage =
+                        !link.findElements(By.tagName("img")).isEmpty();
+
+                if (link.isDisplayed()
+                        && hasImage
+                        && href != null
+                        && href.contains("elaraastudio.com")
+                        && !href.endsWith("/home")
+                        && !href.contains("filterdeal")
+                        && !href.contains("search=")) {
+
+                    productLink = link;
+                    break;
+                }
+
+            } catch (StaleElementReferenceException e) {
+                // Continue checking other links
+            }
+        }
+
+        Assert.assertNotNull(
+                productLink,
+                "No visible product image link was found");
+
+        String oldUrl = driver.getCurrentUrl();
+
+        productLink.click();
+
+        wait.until(d ->
+                !d.getCurrentUrl().equals(oldUrl));
+
+        Assert.assertNotEquals(
+                driver.getCurrentUrl(),
+                oldUrl,
+                "Product details navigation did not change the URL");
+
+        System.out.println("Product details URL: " +
+                driver.getCurrentUrl());
+
+        System.out.println("Product details page opened.");
     }
 }
