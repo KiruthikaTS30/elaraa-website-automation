@@ -1,4 +1,3 @@
-
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -58,14 +57,20 @@ public class HomePageTest {
         );
     }
 
+    // Open homepage
+
     public void openHomePage() {
 
         driver.get("https://elaraastudio.com/home");
 
         wait.until(
-            ExpectedConditions.visibilityOfElementLocated(loginButton)
+            ExpectedConditions.visibilityOfElementLocated(
+                loginButton
+            )
         );
     }
+
+    // Wait until Login button is not blocked
 
     public void waitUntilLoginIsUnblocked() {
 
@@ -82,7 +87,8 @@ public class HomePageTest {
                     }
                 }
 
-                WebElement button = d.findElement(loginButton);
+                WebElement button =
+                    d.findElement(loginButton);
 
                 return (Boolean) ((JavascriptExecutor) d)
                     .executeScript(
@@ -103,6 +109,8 @@ public class HomePageTest {
         }
     }
 
+    // Open Login form
+
     public void openLoginForm() {
 
         openHomePage();
@@ -112,11 +120,13 @@ public class HomePageTest {
         driver.findElement(loginButton).click();
 
         wait.until(
-            ExpectedConditions.visibilityOfElementLocated(mobileNumber)
+            ExpectedConditions.visibilityOfElementLocated(
+                mobileNumber
+            )
         );
     }
 
-    // TEST CASE 1: Verify homepage title and HTTPS URL
+    // TEST 1: Verify homepage title and HTTPS
 
     @Test
     public void verifyHomePage() {
@@ -141,14 +151,15 @@ public class HomePageTest {
         );
     }
 
-    // TEST CASE 2: Verify homepage Login content
+    // TEST 2: Verify homepage Login content
 
     @Test
     public void verifyHomePageContent() {
 
         openHomePage();
 
-        WebElement login = driver.findElement(loginButton);
+        WebElement login =
+            driver.findElement(loginButton);
 
         Assert.assertTrue(
             login.isDisplayed(),
@@ -161,19 +172,21 @@ public class HomePageTest {
         );
 
         System.out.println("Homepage body text:");
+
         System.out.println(
             driver.findElement(By.tagName("body")).getText()
         );
     }
 
-    // TEST CASE 3: Verify Login button functionality
+    // TEST 3: Verify Login button functionality
 
     @Test
     public void verifyLoginButtonClick() {
 
         openLoginForm();
 
-        WebElement mobile = driver.findElement(mobileNumber);
+        WebElement mobile =
+            driver.findElement(mobileNumber);
 
         Assert.assertTrue(
             mobile.isDisplayed(),
@@ -181,13 +194,14 @@ public class HomePageTest {
         );
 
         System.out.println("Login form opened successfully.");
+
         System.out.println(
             "Mobile placeholder: " +
             mobile.getAttribute("placeholder")
         );
     }
 
-    // TEST CASE 4: Verify Campaign page
+    // TEST 4: Investigate Campaign page
 
     @Test
     public void verifyCampaignPageLoads() {
@@ -196,39 +210,81 @@ public class HomePageTest {
             "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true"
         );
 
-        wait.until(
+        WebDriverWait campaignWait =
+            new WebDriverWait(
+                driver,
+                Duration.ofSeconds(20)
+            );
+
+        WebElement root = campaignWait.until(
             ExpectedConditions.presenceOfElementLocated(
-                By.tagName("body")
+                By.id("root")
             )
         );
 
+        try {
+
+            campaignWait.until(d -> {
+
+                WebElement currentRoot =
+                    d.findElement(By.id("root"));
+
+                return !currentRoot.getText()
+                    .trim().isEmpty();
+            });
+
+        } catch (TimeoutException e) {
+
+            System.out.println(
+                "Campaign content did not appear within 20 seconds."
+            );
+        }
+
         String title = driver.getTitle();
 
+        String url = driver.getCurrentUrl();
+
+        String rootText = driver
+            .findElement(By.id("root"))
+            .getText()
+            .trim();
+
+        String rootHTML = driver
+            .findElement(By.id("root"))
+            .getAttribute("innerHTML");
+
         System.out.println("Campaign page title: " + title);
+
+        System.out.println("Campaign URL: " + url);
+
         System.out.println(
-            "Campaign URL: " + driver.getCurrentUrl()
+            "Campaign root content: " + rootText
+        );
+
+        System.out.println(
+            "Campaign root HTML: " + rootHTML
         );
 
         Assert.assertTrue(
-            driver.getCurrentUrl().contains("filterdeal"),
+            url.contains("filterdeal"),
             "Campaign page URL is incorrect"
         );
 
         Assert.assertFalse(
-            driver.findElement(By.tagName("body"))
-                .getText().trim().isEmpty(),
-            "Campaign page body is empty"
+            rootText.isEmpty(),
+            "Campaign page has no visible content."
         );
     }
 
-    // TEST CASE 5: Verify empty mobile number validation
+    // TEST 5: Verify empty mobile number validation
 
     @Test
     public void verifyEmptyMobileNumberValidation() {
 
         openLoginForm();
 
-        WebElement mobile = driver.findElement(mobileNumber);
+        WebElement mobile =
+            driver.findElement(mobileNumber);
 
         Assert.assertEquals(
             mobile.getAttribute("value"),
@@ -251,10 +307,14 @@ public class HomePageTest {
             mobile
         );
 
-        System.out.println("Required: " +
-            mobile.getAttribute("required"));
+        System.out.println(
+            "Required: " +
+            mobile.getAttribute("required")
+        );
 
-        System.out.println("Input valid: " + valid);
+        System.out.println(
+            "Input valid: " + valid
+        );
 
         System.out.println(
             "Browser validation message: " + message
@@ -266,14 +326,15 @@ public class HomePageTest {
         );
     }
 
-    // TEST CASE 6: Check invalid mobile number behaviour
+    // TEST 6: Investigate invalid mobile number
 
     @Test
     public void verifyInvalidMobileNumberValidation() {
 
         openLoginForm();
 
-        WebElement mobile = driver.findElement(mobileNumber);
+        WebElement mobile =
+            driver.findElement(mobileNumber);
 
         mobile.sendKeys("12345");
 
@@ -298,7 +359,7 @@ public class HomePageTest {
         );
 
         System.out.println(
-            "Invalid number input valid: " + valid
+            "Browser validation valid: " + valid
         );
 
         System.out.println(
@@ -311,9 +372,21 @@ public class HomePageTest {
         );
 
         System.out.println(
-            "Invalid mobile number test completed."
+            "Current page URL: " +
+            driver.getCurrentUrl()
+        );
+
+        System.out.println(
+            "Page response after Continue: " +
+            driver.findElement(By.tagName("body")).getText()
+        );
+
+        System.out.println(
+            "Invalid number investigation completed."
         );
     }
+
+    // Close browser after every test
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
