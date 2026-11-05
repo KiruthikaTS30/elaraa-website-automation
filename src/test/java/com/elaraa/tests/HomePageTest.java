@@ -374,14 +374,42 @@ public class HomePageTest {
 
         WebElement bag = driver.findElement(shoppingBagButton);
 
-        Assert.assertTrue(bag.isDisplayed());
+        Assert.assertTrue(
+                bag.isDisplayed(),
+                "Shopping bag button is not displayed");
+
+        String previousUrl = driver.getCurrentUrl();
+
+        String previousPageText =
+                driver.findElement(By.tagName("body")).getText();
 
         bag.click();
 
-        System.out.println("Shopping bag button clicked.");
+        wait.until(d -> {
 
-        System.out.println(
-                driver.findElement(By.tagName("body")).getText());
+            String currentUrl = d.getCurrentUrl();
+
+            String currentPageText =
+                    d.findElement(By.tagName("body")).getText();
+
+            return !currentUrl.equals(previousUrl)
+                    || !currentPageText.equals(previousPageText);
+        });
+
+        String currentUrl = driver.getCurrentUrl();
+
+        String currentPageText =
+                driver.findElement(By.tagName("body")).getText();
+
+        Assert.assertTrue(
+                !currentUrl.equals(previousUrl)
+                        || !currentPageText.equals(previousPageText),
+                "Shopping bag click produced no observable page change");
+
+        System.out.println("Shopping bag button response verified.");
+        System.out.println("Current URL: " + currentUrl);
+        System.out.println("Updated page content:");
+        System.out.println(currentPageText);
     }
 
 
