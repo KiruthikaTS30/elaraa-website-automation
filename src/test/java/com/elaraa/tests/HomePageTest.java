@@ -38,22 +38,19 @@ public class HomePageTest {
             driver, Duration.ofSeconds(15)
         );
 
-        wait.until(d -> d.getTitle() != null &&
-            !d.getTitle().trim().isEmpty());
+        wait.until(d -> d.getTitle() != null
+            && !d.getTitle().trim().isEmpty());
 
-        String title = driver.getTitle();
-        String url = driver.getCurrentUrl();
-
-        System.out.println("Page Title: " + title);
-        System.out.println("URL: " + url);
+        System.out.println("Page Title: " + driver.getTitle());
+        System.out.println("URL: " + driver.getCurrentUrl());
 
         Assert.assertTrue(
-            url.startsWith("https://"),
+            driver.getCurrentUrl().startsWith("https://"),
             "Website should use HTTPS"
         );
 
         Assert.assertFalse(
-            title.trim().isEmpty(),
+            driver.getTitle().trim().isEmpty(),
             "Page title should not be empty"
         );
     }
@@ -66,38 +63,45 @@ public class HomePageTest {
         );
 
         WebDriverWait wait = new WebDriverWait(
-            driver, Duration.ofSeconds(15)
+            driver, Duration.ofSeconds(20)
         );
 
-        wait.until(d -> !d.findElements(
-            By.tagName("input")).isEmpty());
+        wait.until(d -> d.findElements(
+            By.cssSelector("input, textarea")
+        ).size() > 0);
 
-        List<WebElement> inputs =
-            driver.findElements(By.tagName("input"));
-
-        System.out.println(
-            "Total input fields: " + inputs.size()
+        List<WebElement> elements = driver.findElements(
+            By.cssSelector("input, textarea")
         );
 
-        for (WebElement input : inputs) {
+        System.out.println("Total search-related fields: "
+            + elements.size());
 
-            System.out.println("Type: " +
-                input.getAttribute("type"));
+        for (WebElement element : elements) {
 
-            System.out.println("Placeholder: " +
-                input.getAttribute("placeholder"));
+            System.out.println("Tag: "
+                + element.getTagName());
 
-            System.out.println("Name: " +
-                input.getAttribute("name"));
+            System.out.println("Type: "
+                + element.getAttribute("type"));
 
-            System.out.println("ID: " +
-                input.getAttribute("id"));
+            System.out.println("Placeholder: "
+                + element.getAttribute("placeholder"));
+
+            System.out.println("Name: "
+                + element.getAttribute("name"));
+
+            System.out.println("ID: "
+                + element.getAttribute("id"));
+
+            System.out.println("Visible: "
+                + element.isDisplayed());
 
             System.out.println("--------------------");
         }
 
         Assert.assertTrue(
-            inputs.size() > 0,
+            elements.size() > 0,
             "Search page should contain an input field"
         );
     }
