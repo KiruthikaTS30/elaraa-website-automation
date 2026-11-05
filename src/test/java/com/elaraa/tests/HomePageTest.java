@@ -1,8 +1,11 @@
 package com.elaraa.tests;
 
 import java.time.Duration;
+import java.util.List;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -17,6 +20,7 @@ public class HomePageTest {
 
     @BeforeMethod
     public void setUp() {
+
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
@@ -43,15 +47,64 @@ public class HomePageTest {
         System.out.println("Page Title: " + title);
         System.out.println("URL: " + url);
 
-        Assert.assertTrue(url.startsWith("https://"),
-            "Website should use HTTPS");
+        Assert.assertTrue(
+            url.startsWith("https://"),
+            "Website should use HTTPS"
+        );
 
-        Assert.assertFalse(title.trim().isEmpty(),
-            "Page title should not be empty");
+        Assert.assertFalse(
+            title.trim().isEmpty(),
+            "Page title should not be empty"
+        );
+    }
+
+    @Test
+    public void inspectSearchElements() {
+
+        driver.get(
+            "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true"
+        );
+
+        WebDriverWait wait = new WebDriverWait(
+            driver, Duration.ofSeconds(15)
+        );
+
+        wait.until(d -> !d.findElements(
+            By.tagName("input")).isEmpty());
+
+        List<WebElement> inputs =
+            driver.findElements(By.tagName("input"));
+
+        System.out.println(
+            "Total input fields: " + inputs.size()
+        );
+
+        for (WebElement input : inputs) {
+
+            System.out.println("Type: " +
+                input.getAttribute("type"));
+
+            System.out.println("Placeholder: " +
+                input.getAttribute("placeholder"));
+
+            System.out.println("Name: " +
+                input.getAttribute("name"));
+
+            System.out.println("ID: " +
+                input.getAttribute("id"));
+
+            System.out.println("--------------------");
+        }
+
+        Assert.assertTrue(
+            inputs.size() > 0,
+            "Search page should contain an input field"
+        );
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
+
         if (driver != null) {
             driver.quit();
         }
