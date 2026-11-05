@@ -1,3 +1,4 @@
+
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -119,19 +120,29 @@ public class HomePageTest {
         driver.get("https://elaraastudio.com/home");
 
         wait.until(d ->
-            d.getTitle() != null &&
-            !d.getTitle().trim().isEmpty()
+            d.executeScript("return document.readyState")
+                .equals("complete")
+        );
+
+        wait.until(d ->
+            d.findElement(By.tagName("body")).isDisplayed()
         );
 
         List<WebElement> elements = driver.findElements(
-            By.cssSelector("button, a, [role='button']")
+            By.cssSelector(
+                "button, a, [role='button'], input, [onclick], svg"
+            )
         );
+
+        int visibleCount = 0;
 
         System.out.println("Homepage elements:");
 
         for (WebElement element : elements) {
 
             if (element.isDisplayed()) {
+
+                visibleCount++;
 
                 System.out.println(
                     "Tag: " + element.getTagName()
@@ -161,12 +172,12 @@ public class HomePageTest {
         }
 
         System.out.println(
-            "Total buttons and links: " + elements.size()
+            "Total visible interactive elements: " + visibleCount
         );
 
         Assert.assertTrue(
-            elements.size() > 0,
-            "Homepage should contain buttons or links"
+            visibleCount > 0,
+            "Homepage should contain visible interactive elements"
         );
     }
 
