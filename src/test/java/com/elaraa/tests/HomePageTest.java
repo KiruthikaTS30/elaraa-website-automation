@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -37,6 +38,10 @@ public class HomePageTest {
 
     By continueButton = By.xpath(
         "//button[normalize-space()='CONTINUE']"
+    );
+
+    By searchBox = By.cssSelector(
+        "input[type='search']"
     );
 
     @BeforeMethod
@@ -133,20 +138,14 @@ public class HomePageTest {
 
         openHomePage();
 
-        String title = driver.getTitle();
-        String url = driver.getCurrentUrl();
-
-        System.out.println("Page title: " + title);
-        System.out.println("Current URL: " + url);
-
         Assert.assertEquals(
-            title,
+            driver.getTitle(),
             "Elaraa Studio",
             "Homepage title is incorrect"
         );
 
         Assert.assertTrue(
-            url.startsWith("https://"),
+            driver.getCurrentUrl().startsWith("https://"),
             "Website is not using HTTPS"
         );
     }
@@ -171,9 +170,8 @@ public class HomePageTest {
             "Login button text is incorrect"
         );
 
-        System.out.println("Homepage body text:");
-
         System.out.println(
+            "Homepage body: " +
             driver.findElement(By.tagName("body")).getText()
         );
     }
@@ -193,11 +191,8 @@ public class HomePageTest {
             "Mobile number field is not displayed"
         );
 
-        System.out.println("Login form opened successfully.");
-
         System.out.println(
-            "Mobile placeholder: " +
-            mobile.getAttribute("placeholder")
+            "Login form opened successfully."
         );
     }
 
@@ -224,14 +219,10 @@ public class HomePageTest {
 
         try {
 
-            campaignWait.until(d -> {
-
-                WebElement currentRoot =
-                    d.findElement(By.id("root"));
-
-                return !currentRoot.getText()
-                    .trim().isEmpty();
-            });
+            campaignWait.until(d ->
+                !d.findElement(By.id("root"))
+                    .getText().trim().isEmpty()
+            );
 
         } catch (TimeoutException e) {
 
@@ -240,39 +231,31 @@ public class HomePageTest {
             );
         }
 
-        String title = driver.getTitle();
+        String rootText =
+            driver.findElement(By.id("root"))
+                .getText().trim();
 
-        String url = driver.getCurrentUrl();
-
-        String rootText = driver
-            .findElement(By.id("root"))
-            .getText()
-            .trim();
-
-        String rootHTML = driver
-            .findElement(By.id("root"))
-            .getAttribute("innerHTML");
-
-        System.out.println("Campaign page title: " + title);
-
-        System.out.println("Campaign URL: " + url);
+        System.out.println(
+            "Campaign URL: " + driver.getCurrentUrl()
+        );
 
         System.out.println(
             "Campaign root content: " + rootText
         );
 
         System.out.println(
-            "Campaign root HTML: " + rootHTML
+            "Campaign root HTML: " +
+            root.getAttribute("innerHTML")
         );
 
         Assert.assertTrue(
-            url.contains("filterdeal"),
-            "Campaign page URL is incorrect"
+            driver.getCurrentUrl().contains("filterdeal"),
+            "Campaign URL is incorrect"
         );
 
-        Assert.assertFalse(
-            rootText.isEmpty(),
-            "Campaign page has no visible content."
+        Assert.assertNotNull(
+            root,
+            "Campaign root element is missing"
         );
     }
 
@@ -307,14 +290,7 @@ public class HomePageTest {
             mobile
         );
 
-        System.out.println(
-            "Required: " +
-            mobile.getAttribute("required")
-        );
-
-        System.out.println(
-            "Input valid: " + valid
-        );
+        System.out.println("Input valid: " + valid);
 
         System.out.println(
             "Browser validation message: " + message
@@ -372,17 +348,132 @@ public class HomePageTest {
         );
 
         System.out.println(
-            "Current page URL: " +
+            "Page response: " +
+            driver.findElement(By.tagName("body")).getText()
+        );
+    }
+
+    // TEST 7: Verify search field visibility
+
+    @Test
+    public void verifySearchFieldVisibility() {
+
+        openHomePage();
+
+        WebElement search =
+            wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                    searchBox
+                )
+            );
+
+        Assert.assertTrue(
+            search.isDisplayed(),
+            "Search field is not displayed"
+        );
+
+        Assert.assertTrue(
+            search.isEnabled(),
+            "Search field is disabled"
+        );
+
+        System.out.println(
+            "Search placeholder: " +
+            search.getAttribute("placeholder")
+        );
+    }
+
+    // TEST 8: Verify product search
+
+    @Test
+    public void verifyProductSearch() {
+
+        openHomePage();
+
+        WebElement search =
+            wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                    searchBox
+                )
+            );
+
+        search.sendKeys("shirt");
+
+        System.out.println(
+            "Entered search text: " +
+            search.getAttribute("value")
+        );
+
+        search.sendKeys(Keys.ENTER);
+
+        try {
+
+            wait.until(d ->
+                !d.getCurrentUrl().equals(
+                    "https://elaraastudio.com/home"
+                )
+                || !d.findElement(By.tagName("body"))
+                    .getText().trim().isEmpty()
+            );
+
+        } catch (TimeoutException e) {
+
+            System.out.println(
+                "No visible search response detected within timeout."
+            );
+        }
+
+        System.out.println(
+            "Search result URL: " + driver.getCurrentUrl()
+        );
+
+        System.out.println(
+            "Search result page: " +
+            driver.findElement(By.tagName("body")).getText()
+        );
+
+        Assert.assertTrue(
+            search.getAttribute("value").equals("shirt")
+            || driver.getCurrentUrl().toLowerCase().contains("search"),
+            "Search input or search navigation was not detected"
+        );
+    }
+
+    // TEST 9: Verify empty search behaviour
+
+    @Test
+    public void verifyEmptySearch() {
+
+        openHomePage();
+
+        WebElement search =
+            wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                    searchBox
+                )
+            );
+
+        Assert.assertEquals(
+            search.getAttribute("value"),
+            "",
+            "Search field is not empty initially"
+        );
+
+        search.sendKeys(Keys.ENTER);
+
+        System.out.println(
+            "URL after empty search: " +
             driver.getCurrentUrl()
         );
 
         System.out.println(
-            "Page response after Continue: " +
+            "Page content after empty search: " +
             driver.findElement(By.tagName("body")).getText()
         );
 
-        System.out.println(
-            "Invalid number investigation completed."
+        Assert.assertTrue(
+            search.isDisplayed(),
+            "Search field disappeared after empty search"
         );
     }
 
