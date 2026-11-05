@@ -4,12 +4,13 @@ import java.time.Duration;
 import java.util.List;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.TimeoutException;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -37,13 +38,13 @@ public class HomePageTest {
     public void verifyHomePage() {
         driver.get("https://elaraastudio.com/home");
 
-        wait.until(d -> d.findElement(By.id("root")).isDisplayed());
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.id("root")));
 
-        Assert.assertTrue(driver.getCurrentUrl().startsWith("https://"));
         Assert.assertEquals(driver.getTitle(), "Elaraa Studio");
+        Assert.assertTrue(driver.getCurrentUrl().startsWith("https://"));
 
-        System.out.println("PASS: Homepage loaded");
-        System.out.println("Title: " + driver.getTitle());
+        System.out.println("PASS: Homepage validation");
     }
 
     @Test
@@ -51,76 +52,103 @@ public class HomePageTest {
         driver.get("https://elaraastudio.com/home");
 
         wait.until(d -> d.findElement(By.id("root"))
-                         .getText().contains("Login"));
+                .getText().contains("Login"));
 
-        String pageText = driver.findElement(By.id("root")).getText();
+        String text = driver.findElement(By.id("root")).getText();
 
-        Assert.assertTrue(pageText.contains("Profile"),
-                "Profile text should be present");
-        Assert.assertTrue(pageText.contains("Wishlist"),
-                "Wishlist text should be present");
-        Assert.assertTrue(pageText.contains("Bags"),
-                "Bags text should be present");
-        Assert.assertTrue(pageText.contains("Login"),
-                "Login text should be present");
+        Assert.assertTrue(text.contains("Profile"));
+        Assert.assertTrue(text.contains("Wishlist"));
+        Assert.assertTrue(text.contains("Bags"));
+        Assert.assertTrue(text.contains("Login"));
 
-        System.out.println("PASS: Homepage content verified");
+        System.out.println("PASS: Homepage content validation");
     }
 
+    // LOGIN FUNCTIONAL INSPECTION
     @Test
-    public void inspectLoginDOM() {
+    public void inspectLoginAfterClick() {
         driver.get("https://elaraastudio.com/home");
 
-        wait.until(d -> d.findElement(By.id("root"))
-                         .getText().contains("Login"));
+        By loginLocator = By.cssSelector(
+                "button[aria-label='Login to your account']");
 
-        JavascriptExecutor js = (JavascriptExecutor) driver;
+        WebElement loginButton = wait.until(
+                ExpectedConditions.elementToBeClickable(loginLocator));
 
-        List<WebElement> loginElements = driver.findElements(
-            By.xpath("//*[contains(normalize-space(.), 'Login')]")
-        );
+        Assert.assertTrue(loginButton.isDisplayed());
+        Assert.assertTrue(loginButton.isEnabled());
 
-        System.out.println("LOGIN DOM INSPECTION");
+        loginButton.click();
 
-        for (WebElement element : loginElements) {
-            if (element.getText().trim().equals("Login")) {
-                System.out.println("Tag: " + element.getTagName());
-                System.out.println("HTML: " +
-                        element.getAttribute("outerHTML"));
-                break;
+        System.out.println("LOGIN BUTTON CLICKED");
+        System.out.println("Current URL: " + driver.getCurrentUrl());
+
+        try {
+            new WebDriverWait(driver, Duration.ofSeconds(5)).until(d -> {
+                List<WebElement> fields =
+                        d.findElements(By.cssSelector(
+                                "input, textarea, select"));
+
+                for (WebElement field : fields) {
+                    if (field.isDisplayed()) {
+                        return true;
+                    }
+                }
+
+                return !d.getCurrentUrl().equals(
+                        "https://elaraastudio.com/home");
+            });
+        } catch (TimeoutException e) {
+            System.out.println(
+                    "No visible form or URL change detected within 5 seconds.");
+        }
+
+        System.out.println("FIELDS AFTER LOGIN CLICK:");
+
+        List<WebElement> fields = driver.findElements(
+                By.cssSelector("input, textarea, select"));
+
+        for (WebElement field : fields) {
+            if (field.isDisplayed()) {
+                System.out.println("Tag: " + field.getTagName());
+                System.out.println("Type: " +
+                        field.getAttribute("type"));
+                System.out.println("Placeholder: " +
+                        field.getAttribute("placeholder"));
+                System.out.println("Name: " +
+                        field.getAttribute("name"));
+                System.out.println("-------------------");
             }
         }
 
-        String clickableInfo = (String) js.executeScript(
-            "const nodes = [...document.querySelectorAll('#root *')];" +
-            "const el = nodes.find(e => e.textContent.trim() === 'Login');" +
-            "if (!el) return 'LOGIN ELEMENT NOT FOUND';" +
-            "return 'Tag: ' + el.tagName + " +
-            "' | Parent: ' + el.parentElement.outerHTML.substring(0, 1500);"
-        );
+        System.out.println("VISIBLE BUTTONS AFTER LOGIN CLICK:");
 
-        System.out.println(clickableInfo);
+        List<WebElement> buttons = driver.findElements(
+                By.tagName("button"));
 
-        Assert.assertTrue(
-            driver.findElement(By.id("root")).isDisplayed(),
-            "Homepage should be visible"
-        );
+        for (WebElement button : buttons) {
+            if (button.isDisplayed()) {
+                System.out.println(
+                        "Text: " + button.getText());
+                System.out.println(
+                        "ARIA: " + button.getAttribute("aria-label"));
+            }
+        }
+
+        System.out.println("LOGIN INSPECTION COMPLETED");
     }
 
     @Test
     public void verifySearchPageLoads() {
         driver.get(
-            "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true"
-        );
+                "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true");
 
-        wait.until(d -> d.findElement(By.tagName("body")).isDisplayed());
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.tagName("body")));
 
-        Assert.assertTrue(
-            driver.getTitle() != null && !driver.getTitle().isEmpty(),
-            "Search page should have a title"
-        );
+        Assert.assertFalse(driver.getTitle().trim().isEmpty());
 
-        System.out.println("PASS: Search page loaded");
+        System.out.println("PASS: Campaign page loaded");
     }
 
     @AfterMethod(alwaysRun = true)
