@@ -1,4 +1,3 @@
-
 package com.elaraa.tests;
 
 import java.time.Duration;
@@ -7,8 +6,9 @@ import java.util.List;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.ChromeDriver;
+import org.openqa.selenium.ChromeOptions;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -20,6 +20,7 @@ import org.testng.annotations.Test;
 public class HomePageTest {
 
     WebDriver driver;
+    WebDriverWait wait;
 
     @BeforeMethod
     public void setUp() {
@@ -31,17 +32,17 @@ public class HomePageTest {
         options.addArguments("--disable-dev-shm-usage");
 
         driver = new ChromeDriver(options);
+
+        wait = new WebDriverWait(
+            driver, Duration.ofSeconds(20)
+        );
     }
 
-    // TEST CASE 1: Verify Homepage
+    // TEST 1: Homepage Validation
     @Test
     public void verifyHomePage() {
 
         driver.get("https://elaraastudio.com/home");
-
-        WebDriverWait wait = new WebDriverWait(
-            driver, Duration.ofSeconds(15)
-        );
 
         wait.until(d -> d.getTitle() != null
             && !d.getTitle().trim().isEmpty());
@@ -60,16 +61,12 @@ public class HomePageTest {
         );
     }
 
-    // TEST CASE 2: Inspect Search Elements
+    // TEST 2: Inspect Search Elements
     @Test
     public void inspectSearchElements() {
 
         driver.get(
             "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true"
-        );
-
-        WebDriverWait wait = new WebDriverWait(
-            driver, Duration.ofSeconds(20)
         );
 
         wait.until(d -> d.findElements(
@@ -105,37 +102,49 @@ public class HomePageTest {
         );
     }
 
-    // TEST CASE 3: Verify View Account Button
+    // TEST 3: View Account Button
     @Test
     public void verifyViewAccountButton() {
 
         driver.get("https://elaraastudio.com/home");
 
-        WebDriverWait wait = new WebDriverWait(
-            driver, Duration.ofSeconds(20)
+        By accountLocator = By.cssSelector(
+            "button[aria-label='View account']"
         );
 
         WebElement accountButton = wait.until(
-            ExpectedConditions.elementToBeClickable(
-                By.cssSelector(
-                    "button[aria-label='View account']"
-                )
+            ExpectedConditions.visibilityOfElementLocated(
+                accountLocator
             )
         );
 
         Assert.assertTrue(
             accountButton.isDisplayed(),
-            "View Account button should be visible"
+            "Account button should be visible"
         );
 
-        System.out.println(
-            "View Account button is visible"
+        System.out.println("Account button is visible");
+
+        // Scroll button into view
+        ((JavascriptExecutor) driver).executeScript(
+            "arguments[0].scrollIntoView({block:'center'});",
+            accountButton
         );
 
+        // Wait until clickable
+        accountButton = wait.until(
+            ExpectedConditions.elementToBeClickable(
+                accountLocator
+            )
+        );
+
+        // Normal Selenium click
         accountButton.click();
 
-        // Wait for navigation or account panel
-        wait.until(d ->
+        System.out.println("Account button clicked");
+
+        // Check whether URL or account panel changes
+        boolean opened = wait.until(d ->
             !d.getCurrentUrl().equals(
                 "https://elaraastudio.com/home"
             )
@@ -147,8 +156,9 @@ public class HomePageTest {
             ).stream().anyMatch(WebElement::isDisplayed)
         );
 
-        System.out.println(
-            "View Account button clicked successfully"
+        Assert.assertTrue(
+            opened,
+            "Account page or panel should open"
         );
 
         System.out.println(
