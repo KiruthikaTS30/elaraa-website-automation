@@ -8,6 +8,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -545,6 +546,79 @@ public class HomePageTest {
 
         System.out.println(
                 "Loaded homepage images: " + loadedImageCount);
+    }
+
+
+    // TEST 16, 17, 18: CATEGORY NAVIGATION
+
+    @Test
+    public void verifyBottomWearCategoryNavigation() {
+        verifyCategoryNavigation("Bottom Wear");
+    }
+
+    @Test
+    public void verifyChudidarSetsCategoryNavigation() {
+        verifyCategoryNavigation("Chudidar Sets");
+    }
+
+    @Test
+    public void verifyTopsCategoryNavigation() {
+        verifyCategoryNavigation("Tops");
+    }
+
+
+    // REUSABLE CATEGORY NAVIGATION METHOD
+
+    private void verifyCategoryNavigation(String categoryName) {
+
+        openHomePage();
+
+        WebDriverWait categoryWait =
+                new WebDriverWait(driver, Duration.ofSeconds(20));
+
+        By categoryLocator = By.xpath(
+                "//*[normalize-space()='" + categoryName + "']"
+        );
+
+        WebElement categoryElement = categoryWait.until(d -> {
+
+            try {
+                List<WebElement> elements =
+                        d.findElements(categoryLocator);
+
+                for (WebElement element : elements) {
+
+                    if (element.isDisplayed()) {
+                        return element;
+                    }
+                }
+
+                return null;
+
+            } catch (StaleElementReferenceException e) {
+                return null;
+            }
+        });
+
+        Assert.assertNotNull(
+                categoryElement,
+                categoryName + " category is not visible");
+
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].click();",
+                categoryElement);
+
+        categoryWait.until(d ->
+                d.getCurrentUrl().contains("categoryId="));
+
+        String currentUrl = driver.getCurrentUrl();
+
+        System.out.println(
+                categoryName + " category URL: " + currentUrl);
+
+        Assert.assertTrue(
+                currentUrl.contains("categoryId="),
+                categoryName + " category navigation failed");
     }
 
 
