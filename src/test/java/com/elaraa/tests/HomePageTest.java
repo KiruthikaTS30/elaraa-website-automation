@@ -697,6 +697,46 @@ public void verifyProductDetailsPage() {
     System.out.println("Product price: ₹574");
 }
 
+    // TEST 20: VERIFY PRODUCT SIZE SELECTION
+
+@Test
+public void verifyProductSizeSelection() {
+
+    String productUrl =
+            "https://elaraastudio.com/product/details/20?itemId=58";
+
+    driver.get(productUrl);
+
+    wait.until(
+            ExpectedConditions.visibilityOfElementLocated(
+                    By.id("root")));
+
+    By mediumSize = By.xpath(
+            "//div[contains(@class,'modern-variant-option-card')]" +
+            "[.//span[contains(@class,'option-text-label') " +
+            "and normalize-space()='M']]"
+    );
+
+    WebElement sizeM = wait.until(
+            ExpectedConditions.elementToBeClickable(mediumSize));
+
+    sizeM.click();
+
+    wait.until(d ->
+            d.findElement(mediumSize)
+                    .getAttribute("class")
+                    .contains("selected"));
+
+    String selectedClass =
+            driver.findElement(mediumSize).getAttribute("class");
+
+    Assert.assertTrue(
+            selectedClass.contains("selected"),
+            "Medium size was not selected");
+
+    System.out.println("Product size selection verified.");
+    System.out.println("Selected size: M");
+}
 
     // REUSABLE CATEGORY NAVIGATION METHOD
 
