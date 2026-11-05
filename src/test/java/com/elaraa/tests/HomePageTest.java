@@ -6,9 +6,10 @@ import java.util.List;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.ChromeDriver;
-import org.openqa.selenium.ChromeOptions;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -30,6 +31,7 @@ public class HomePageTest {
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--window-size=1920,1080");
 
         driver = new ChromeDriver(options);
 
@@ -44,8 +46,10 @@ public class HomePageTest {
 
         driver.get("https://elaraastudio.com/home");
 
-        wait.until(d -> d.getTitle() != null
-            && !d.getTitle().trim().isEmpty());
+        wait.until(d ->
+            d.getTitle() != null &&
+            !d.getTitle().trim().isEmpty()
+        );
 
         System.out.println("Page Title: " + driver.getTitle());
         System.out.println("URL: " + driver.getCurrentUrl());
@@ -69,9 +73,11 @@ public class HomePageTest {
             "https://elaraastudio.com/filterdeal?campaign=4&campaignstatus=true"
         );
 
-        wait.until(d -> d.findElements(
-            By.cssSelector("input, textarea")
-        ).size() > 0);
+        wait.until(d ->
+            d.findElements(
+                By.cssSelector("input, textarea")
+            ).size() > 0
+        );
 
         List<WebElement> elements = driver.findElements(
             By.cssSelector("input, textarea, button")
@@ -81,17 +87,23 @@ public class HomePageTest {
 
             System.out.println("Tag: " + element.getTagName());
 
-            System.out.println("Type: " +
-                element.getAttribute("type"));
+            System.out.println(
+                "Type: " + element.getAttribute("type")
+            );
 
-            System.out.println("Placeholder: " +
-                element.getAttribute("placeholder"));
+            System.out.println(
+                "Placeholder: " +
+                element.getAttribute("placeholder")
+            );
 
-            System.out.println("ARIA label: " +
-                element.getAttribute("aria-label"));
+            System.out.println(
+                "ARIA label: " +
+                element.getAttribute("aria-label")
+            );
 
-            System.out.println("Visible: " +
-                element.isDisplayed());
+            System.out.println(
+                "Visible: " + element.isDisplayed()
+            );
 
             System.out.println("--------------------");
         }
@@ -123,7 +135,9 @@ public class HomePageTest {
             "Account button should be visible"
         );
 
-        System.out.println("Account button is visible");
+        System.out.println(
+            "Account button is visible"
+        );
 
         // Scroll button into view
         ((JavascriptExecutor) driver).executeScript(
@@ -138,12 +152,14 @@ public class HomePageTest {
             )
         );
 
-        // Normal Selenium click
+        // Perform normal Selenium click
         accountButton.click();
 
-        System.out.println("Account button clicked");
+        System.out.println(
+            "Account button clicked"
+        );
 
-        // Check whether URL or account panel changes
+        // Verify account page or panel
         boolean opened = wait.until(d ->
             !d.getCurrentUrl().equals(
                 "https://elaraastudio.com/home"
@@ -153,7 +169,9 @@ public class HomePageTest {
                 By.cssSelector(
                     "[role='dialog'], [role='menu']"
                 )
-            ).stream().anyMatch(WebElement::isDisplayed)
+            ).stream().anyMatch(
+                WebElement::isDisplayed
+            )
         );
 
         Assert.assertTrue(
